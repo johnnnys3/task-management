@@ -21,9 +21,34 @@ class TaskManagementScreen extends StatefulWidget {
 }
 
 class _TaskManagementScreenState extends State<TaskManagementScreen> {
-  List<Task> tasks = [
-    
-  ];
+  List<Task> tasks = [];
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch tasks when the screen initializes
+    _fetchTasks();
+  }
+
+  Future<void> _fetchTasks() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    // Simulate fetching tasks from a database or an API
+    await Future.delayed(Duration(seconds: 2), () {
+      // Replace this with your actual task fetching logic
+      tasks = [
+       
+        // Add more tasks as needed
+      ];
+
+      setState(() {
+        isLoading = false;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,14 +75,16 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.bar_chart),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ReportingScreen()),
-              );
-            },
-          ),
+  icon: Icon(Icons.bar_chart),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ReportingScreen()),
+    );
+  },
+),
+
+          
           IconButton(
             icon: Icon(Icons.group),
             onPressed: () {
@@ -101,46 +128,56 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: tasks.length,
-        itemBuilder: (context, index) {
-          return Card(
-            child: ListTile(
-              title: Text(tasks[index].title),
-              subtitle: Text(tasks[index].description),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TaskDetailsScreen(task: tasks[index]),
+      body: isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : ListView.builder(
+              itemCount: tasks.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  child: ListTile(
+                    title: Text(tasks[index].title),
+                    subtitle: Text(tasks[index].description),
+                    onTap: () {
+                      // Navigate to a separate task details screen
+                      navigateToTaskDetailsScreen(tasks[index]);
+                    },
+                    onLongPress: () {
+                      // Show options for task update or deletion
+                      showTaskOptionsDialog(context, tasks[index]);
+                    },
                   ),
                 );
               },
-              onLongPress: () {
-                // Show options for task update or deletion
-                showTaskOptionsDialog(context, tasks[index]);
-              },
             ),
-          );
-        },
-      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigate to the task creation screen
-          navigateToTaskCreationScreen();
+        onPressed: () async {
+          // Navigate to task creation screen
+          Task? newTask = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => TaskCreationScreen()),
+          );
+
+          // Check if a new task was created
+          if (newTask != null) {
+            setState(() {
+              // Add the new task to the list
+              tasks.add(newTask);
+            });
+          }
         },
         child: Icon(Icons.add),
       ),
     );
   }
 
-  void filterTasks(String filterValue) {
-    // Implement logic to filter tasks based on the selected value
-    // Update the 'tasks' list accordingly
-    setState(() {
-      // Update 'tasks' based on the filterValue
-      // tasks = ... updated task list;
-    });
+  void navigateToTaskDetailsScreen(Task task) {
+    // Implement navigation logic to the task details screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => TaskDetailsScreen(task: task)),
+    );
   }
 
   void showTaskOptionsDialog(BuildContext context, Task task) {
@@ -176,11 +213,6 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
     );
   }
 
-  void navigateToTaskCreationScreen() {
-    // Implement navigation logic to the task creation screen
-    Navigator.push(context, MaterialPageRoute(builder: (context) => TaskCreationScreen()));
-  }
-
   void navigateToUpdateTaskScreen(Task task) {
     // Implement navigation logic to the update task screen
     Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateTaskScreen(task: task)));
@@ -192,5 +224,14 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
       tasks.remove(task);
     });
     // You may also want to delete the task from the database if applicable
+  }
+
+  void filterTasks(String filterValue) {
+    // Implement logic to filter tasks based on the selected value
+    // Update the 'tasks' list accordingly
+    setState(() {
+      // Update 'tasks' based on the filterValue
+      // tasks = ... updated task list;
+    });
   }
 }

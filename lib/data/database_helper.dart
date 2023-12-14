@@ -51,7 +51,7 @@ class DatabaseHelper {
       isCompleted: maps[i]['completed'] == 1,
       description: '', 
       dueDate: DateTime.now(), // You need to provide a default value for DateTime
-      priority: 0, // You need to provide a default value for int
+       // You need to provide a default value for int
       attachments: [], 
       assignedTo: '',
     );

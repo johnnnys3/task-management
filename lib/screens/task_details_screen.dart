@@ -1,6 +1,6 @@
-// screens/task_details_screen.dart
 import 'package:flutter/material.dart';
 import 'package:task_management/models/task.dart';
+import 'package:intl/intl.dart';
 
 class TaskDetailsScreen extends StatelessWidget {
   final Task task;
@@ -21,8 +21,7 @@ class TaskDetailsScreen extends StatelessWidget {
             subtitle: Text(task.description),
           ),
           ListTile(
-            title: Text('Due Date: ${task.dueDate}'),
-            subtitle: Text('Priority: ${task.priority}'),
+            title: Text('Due Date: ${_formattedDate(task.dueDate)}'),
           ),
           ListTile(
             title: Text('Assigned To: ${task.assignedTo}'),
@@ -31,5 +30,9 @@ class TaskDetailsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formattedDate(DateTime date) {
+    return DateFormat('yyyy-MM-dd').format(date);
   }
 }

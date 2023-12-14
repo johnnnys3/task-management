@@ -4,7 +4,7 @@ class Task {
   final String title;
   final String description;
   final DateTime dueDate;
-  final int priority;
+
   final List<String> attachments;
   final String assignedTo;
   bool isCompleted;
@@ -14,7 +14,7 @@ class Task {
     required this.title,
     required this.description,
     required this.dueDate,
-    required this.priority,
+    
     required this.attachments,
     required this.assignedTo,
     this.isCompleted = false,
@@ -27,7 +27,7 @@ class Task {
       title: map['title'],
       description: map['description'],
       dueDate: DateTime.parse(map['dueDate']),
-      priority: map['priority'],
+     
       attachments: List<String>.from(map['attachments']),
       assignedTo: map['assignedTo'],
       isCompleted: map['isCompleted'] == 1,
@@ -40,7 +40,7 @@ class Task {
       'title': title,
       'description': description,
       'dueDate': dueDate.toIso8601String(),
-      'priority': priority,
+     
       'attachments': attachments,
       'assignedTo': assignedTo,
       'isCompleted': isCompleted ? 1 : 0,
