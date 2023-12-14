@@ -1,32 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:task_management/models/task.dart'; // Replace with the actual path
+import 'package:fl_chart/fl_chart.dart';
+import 'package:task_management/models/task.dart';
 
-// ignore: must_be_immutable
-class UpdateTaskScreen extends StatefulWidget {
-  Task task;
-
-  UpdateTaskScreen({Key? key, required this.task}) : super(key: key);
-
-  @override
-  _UpdateTaskScreenState createState() => _UpdateTaskScreenState();
-}
-
-class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
-  late TextEditingController titleController;
-  late TextEditingController descriptionController;
-
-  @override
-  void initState() {
-    super.initState();
-    titleController = TextEditingController(text: widget.task.title);
-    descriptionController = TextEditingController(text: widget.task.description);
-  }
+class ReportingScreen extends StatelessWidget {
+  final List<Task> tasks;
+  ReportingScreen({required this.tasks});
 
   @override
   Widget build(BuildContext context) {
+    // Calculate some basic statistics
+    int totalTasks = tasks.length;
+    int completedTasks = tasks.where((task) => task.isCompleted).length;
+    int pendingTasks = totalTasks - completedTasks;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Update Task'),
+        title: Text('Reporting'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -34,65 +23,49 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Title',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            TextFormField(
-              controller: titleController,
-              decoration: InputDecoration(
-                hintText: 'Enter task title',
-              ),
+              'Task Overview',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
-            Text(
-              'Description',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            TextFormField(
-              controller: descriptionController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Enter task description',
-              ),
-            ),
+            Text('Total Tasks: $totalTasks'),
+            Text('Completed Tasks: $completedTasks'),
+            Text('Pending Tasks: $pendingTasks'),
             SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () {
-                // Implement logic to update the task
-                updateTask();
-              },
-              child: Text('Update Task'),
+            Text(
+              'Task Status Distribution',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            PieChart(
+              PieChartData(
+                sections: [
+                  PieChartSectionData(
+                    color: Colors.green,
+                    value: completedTasks.toDouble(),
+                    title: 'Completed',
+                  ),
+                  PieChartSectionData(
+                    color: Colors.red,
+                    value: pendingTasks.toDouble(),
+                    title: 'Pending',
+                  ),
+                ],
+                sectionsSpace: 0,
+                centerSpaceRadius: 40,
+                startDegreeOffset: 180,
+                borderData: FlBorderData(show: false),
+                
+                sectionsTextStyle: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+                centerSpaceColor: Colors.white,
+              ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  void updateTask() {
-    // Retrieve the new values from the text controllers
-    String updatedTitle = titleController.text;
-    String updatedDescription = descriptionController.text;
-
-    // Create a new Task instance with updated values
-    Task updatedTask = Task(
-      title: updatedTitle,
-      description: updatedDescription,
-      dueDate: widget.task.dueDate,
-      priority: widget.task.priority,
-      attachments: widget.task.attachments,
-      assignedTo: widget.task.assignedTo,
-    );
-
-    // Update the existing task in the widget's state
-    setState(() {
-      widget.task = updatedTask;
-    });
-
-    // TODO: Save the updated task to the database or use your state management solution
-    // Example: taskService.updateTask(widget.task);
-
-    // Navigate back to the task details screen or task list with the updated task
-    Navigator.pop(context, widget.task);
   }
 }
