@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:task_management/authentication/authentication_service.dart';
+import 'package:task_management/authentication/registration_screen.dart';
 import 'package:task_management/screens/home_screen.dart';
-
+ // Import your registration screen
 
 class LoginScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -34,17 +35,34 @@ class LoginScreen extends StatelessWidget {
                 final email = emailController.text.trim();
                 final password = passwordController.text.trim();
 
-                final authService = Provider.of<AuthenticationService>(context, listen: false);
-                final user = await authService.signIn(email, password);
+                final authService =
+                    Provider.of<AuthenticationService>(context, listen: false);
 
-                if (user != null) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomeScreen(userId: '',)),
+                try {
+                  // Sign in with email and password
+                  final user = await authService.signIn(email, password);
+
+                  if (user != null) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomeScreen(userId: user.uid)),
+                    );
+                  } else {
+                    // Show error message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Login failed. Please check your credentials.'),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  // Handle other login errors
+                  print('Login Error: $e');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('An error occurred. Please try again.'),
+                    ),
                   );
-                } else {
-                  // Show error message
-                  // e.g., Fluttertoast.showToast(msg: 'Login failed');
                 }
               },
               child: Text('Login'),
@@ -53,6 +71,10 @@ class LoginScreen extends StatelessWidget {
             TextButton(
               onPressed: () {
                 // Navigate to registration screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RegistrationScreen()),
+                );
               },
               child: Text('Register'),
             ),

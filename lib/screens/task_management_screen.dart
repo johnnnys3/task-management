@@ -1,15 +1,15 @@
-// screens/task_management_screen.dart
+// Import necessary packages and classes
 import 'package:flutter/material.dart';
 import 'package:task_management/models/task.dart';
+import 'package:task_management/screens/task_creation_screen.dart';
 import 'package:task_management/screens/task_details_screen.dart';
 import 'package:task_management/screens/notification_screen.dart';
 import 'package:task_management/screens/collaboration_screen.dart';
-import 'package:task_management/screens/search_screen.dart';
 import 'package:task_management/screens/dashboard_screen.dart';
 import 'package:task_management/screens/reporting_screen.dart';
-import 'package:task_management/screens/calendar_screen.dart';
 import 'package:task_management/screens/messaging_screen.dart';
 import 'package:task_management/screens/calendar_integration_screen.dart';
+import 'package:task_management/screens/update_task_screen.dart';
 
 class TaskManagementScreen extends StatefulWidget {
   final String userId;
@@ -21,7 +21,9 @@ class TaskManagementScreen extends StatefulWidget {
 }
 
 class _TaskManagementScreenState extends State<TaskManagementScreen> {
-  List<Task> tasks = []; // Populate this list with tasks from Firestore or another database
+  List<Task> tasks = [
+    
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +40,7 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
               );
             },
           ),
-            IconButton(
+          IconButton(
             icon: Icon(Icons.dashboard),
             onPressed: () {
               Navigator.push(
@@ -56,50 +58,13 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
               );
             },
           ),
-           IconButton(
+          IconButton(
             icon: Icon(Icons.group),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => CollaborationScreen()),
               );
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.search),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SearchScreen()),
-              );
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.calendar_today),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CalendarScreen()),
-              );
-            },
-          ),
-             IconButton(
-            icon: Icon(Icons.search),
-            onPressed: () {
-              showSearch(context: context, delegate: TaskSearchDelegate(tasks));
-            },
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              // Implement filter logic based on the selected value
-            },
-            itemBuilder: (BuildContext context) {
-              return ['Filter 1', 'Filter 2', 'Filter 3'].map((String choice) {
-                return PopupMenuItem<String>(
-                  value: choice,
-                  child: Text(choice),
-                );
-              }).toList();
             },
           ),
           IconButton(
@@ -118,6 +83,20 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
                 context,
                 MaterialPageRoute(builder: (context) => CalendarIntegrationScreen()),
               );
+            },
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              // Implement filter logic based on the selected value
+              filterTasks(value);
+            },
+            itemBuilder: (BuildContext context) {
+              return ['Filter 1', 'Filter 2', 'Filter 3'].map((String choice) {
+                return PopupMenuItem<String>(
+                  value: choice,
+                  child: Text(choice),
+                );
+              }).toList();
             },
           ),
         ],
@@ -139,6 +118,7 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
               },
               onLongPress: () {
                 // Show options for task update or deletion
+                showTaskOptionsDialog(context, tasks[index]);
               },
             ),
           );
@@ -147,64 +127,70 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Navigate to the task creation screen
+          navigateToTaskCreationScreen();
         },
         child: Icon(Icons.add),
       ),
     );
   }
-}
 
-class TaskSearchDelegate extends SearchDelegate<String> {
-  final List<Task> tasks;
-
-  TaskSearchDelegate(this.tasks);
-
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
+  void filterTasks(String filterValue) {
+    // Implement logic to filter tasks based on the selected value
+    // Update the 'tasks' list accordingly
+    setState(() {
+      // Update 'tasks' based on the filterValue
+      // tasks = ... updated task list;
+    });
   }
 
-  @override
-  Widget buildLeading(BuildContext context) {
-    return IconButton(
-      icon: AnimatedIcon(
-        icon: AnimatedIcons.menu_arrow,
-        progress: transitionAnimation,
-      ),
-      onPressed: () {
-        close(context, '');
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    // Implement search logic
-    return Container();
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    final List<Task> suggestionList = tasks.where((task) => task.title.contains(query)).toList();
-    return ListView.builder(
-      itemCount: suggestionList.length,
-      itemBuilder: (context, index) {
-        return Card(
-          child: ListTile(
-            title: Text(suggestionList[index].title),
-            onTap: () {
-              // Navigate to task details
-            },
+  void showTaskOptionsDialog(BuildContext context, Task task) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Task Options"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                title: Text("Update Task"),
+                onTap: () {
+                  Navigator.pop(context); // Close the dialog
+                  // Navigate to the screen for updating the task
+                  navigateToUpdateTaskScreen(task);
+                },
+              ),
+              ListTile(
+                title: Text("Delete Task"),
+                onTap: () {
+                  Navigator.pop(context); // Close the dialog
+                  // Implement logic to delete the task
+                  deleteTask(task);
+                },
+              ),
+            ],
           ),
         );
       },
     );
+  }
+
+  void navigateToTaskCreationScreen() {
+    // Implement navigation logic to the task creation screen
+    Navigator.push(context, MaterialPageRoute(builder: (context) => TaskCreationScreen()));
+  }
+
+  void navigateToUpdateTaskScreen(Task task) {
+    // Implement navigation logic to the update task screen
+    Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateTaskScreen(task: task)));
+  }
+
+  void deleteTask(Task task) {
+    // Implement logic to delete the task from the 'tasks' list or database
+    setState(() {
+      tasks.remove(task);
+    });
+    // You may also want to delete the task from the database if applicable
   }
 }
