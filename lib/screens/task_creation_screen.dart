@@ -10,18 +10,24 @@ class _TaskCreationScreenState extends State<TaskCreationScreen> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   DateTime selectedDueDate = DateTime.now();
-  int selectedPriority = 1;
   String selectedAssignee = ''; // Assignee user ID
 
   // Counter to keep track of the last assigned ID
   int _lastId = 0;
 
-  // List of sample assignees for the dropdown
-  List<String> assignees = ['Assignee 1', 'Assignee 2', 'Assignee 3'];
+  // Mock function to simulate fetching assignee details from the company database
+  Future<String> fetchAssigneeDetails() async {
+    // Simulate an asynchronous call (replace this with your actual implementation)
+    await Future.delayed(Duration(seconds: 2));
+    return 'Assignee from Company Database';
+  }
 
-  void _createTask(BuildContext context) {
+  void _createTask(BuildContext context) async {
     // Increment the counter for a new unique ID
     _lastId++;
+
+    // Fetch assignee details asynchronously
+    String assigneeDetails = await fetchAssigneeDetails();
 
     // Create the task
     Task newTask = Task(
@@ -29,8 +35,10 @@ class _TaskCreationScreenState extends State<TaskCreationScreen> {
       title: titleController.text,
       description: descriptionController.text,
       dueDate: selectedDueDate,
-      assignedTo: selectedAssignee,
+      assignedTo: assigneeDetails,
       attachments: [],
+      isCompleted: false, // Set the initial completion status to false
+      associatedProject: null, // Set the associated project to null initially
     );
 
     // Pass the new task back to the previous screen
@@ -43,8 +51,8 @@ class _TaskCreationScreenState extends State<TaskCreationScreen> {
       appBar: AppBar(
         title: Text('Create Task'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -52,14 +60,17 @@ class _TaskCreationScreenState extends State<TaskCreationScreen> {
               controller: titleController,
               decoration: InputDecoration(labelText: 'Title'),
             ),
+            SizedBox(height: 16),
             TextField(
               controller: descriptionController,
               decoration: InputDecoration(labelText: 'Description'),
             ),
+            SizedBox(height: 16),
             // Due Date Picker
             Row(
               children: [
                 Text('Due Date: '),
+                SizedBox(width: 8),
                 TextButton(
                   onPressed: () async {
                     DateTime? pickedDate = await showDatePicker(
@@ -81,22 +92,20 @@ class _TaskCreationScreenState extends State<TaskCreationScreen> {
                 ),
               ],
             ),
-            // Assignee Dropdown
-            DropdownButton<String>(
-              value: selectedAssignee,
-              onChanged: (String? newValue) {
-                setState(() {
-                  selectedAssignee = newValue!;
-                });
+            SizedBox(height: 16),
+            // Display the selected assignee
+            Text('Assignee: $selectedAssignee'),
+            SizedBox(height: 16),
+            // Add UI elements for isCompleted and associatedProject
+            CheckboxListTile(
+              title: Text('Completed'),
+              value: false, // Set the initial value (modify as needed)
+              onChanged: (value) {
+                // Handle completion status change
               },
-              items: assignees.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              hint: Text('Select Assignee'),
             ),
+            // UI for selecting the associated project can be added here
+            SizedBox(height: 16),
             // Add more fields (e.g., priority, other fields)
             ElevatedButton(
               onPressed: () {

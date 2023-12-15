@@ -1,6 +1,8 @@
 // models/task.dart
+import 'package:task_management/models/project.dart'; // Import the Project model
+
 class Task {
-  final int id; // Include the id property
+  final int id;
   final String title;
   final String description;
   final DateTime dueDate;
@@ -8,6 +10,8 @@ class Task {
   final List<String> attachments;
   final String assignedTo;
   bool isCompleted;
+
+  final Project? associatedProject; // Reference to the associated project
 
   Task({
     required this.id,
@@ -17,7 +21,8 @@ class Task {
     
     required this.attachments,
     required this.assignedTo,
-    this.isCompleted = false,
+    required this.isCompleted,
+    required this.associatedProject, // Include the associated project
   });
 
   // Add the fromMap factory method to convert from Map to Task
@@ -31,12 +36,13 @@ class Task {
       attachments: List<String>.from(map['attachments']),
       assignedTo: map['assignedTo'],
       isCompleted: map['isCompleted'] == 1,
+      associatedProject: Project.fromMap(map['associatedProject']), // Convert the associated project map to a Project object
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id, // Include the id property
+      'id': id,
       'title': title,
       'description': description,
       'dueDate': dueDate.toIso8601String(),
@@ -44,6 +50,7 @@ class Task {
       'attachments': attachments,
       'assignedTo': assignedTo,
       'isCompleted': isCompleted ? 1 : 0,
+      'associatedProject': associatedProject!.toMap(), // Convert the associated project to a map
     };
   }
 }

@@ -94,7 +94,9 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
       
       attachments: widget.task.attachments,
       assignedTo: widget.task.assignedTo, 
-      id: widget.task.id,
+      id: widget.task.id, 
+      isCompleted: false, 
+      associatedProject: null,
     );
 
     // Update the existing task in the widget's state

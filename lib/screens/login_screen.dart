@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:task_management/authentication/authentication_service.dart';
 import 'package:task_management/authentication/registration_screen.dart';
 import 'package:task_management/screens/home_screen.dart';
- // Import your registration screen
 
 class LoginScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -11,6 +10,8 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthenticationService>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Login'),
@@ -30,13 +31,21 @@ class LoginScreen extends StatelessWidget {
               obscureText: true,
             ),
             SizedBox(height: 16),
+            Row(
+              children: [
+                Checkbox(
+                  value: authService.keepSignedIn,
+                  onChanged: (value) {
+                    authService.keepSignedIn = value ?? false;
+                  },
+                ),
+                Text('Keep me signed in'),
+              ],
+            ),
             ElevatedButton(
               onPressed: () async {
                 final email = emailController.text.trim();
                 final password = passwordController.text.trim();
-
-                final authService =
-                    Provider.of<AuthenticationService>(context, listen: false);
 
                 try {
                   // Sign in with email and password

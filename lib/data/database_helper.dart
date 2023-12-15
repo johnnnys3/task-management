@@ -1,80 +1,56 @@
-import 'dart:async';
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
-import '../models/task.dart';
+import 'package:sembast/sembast.dart';
+import 'package:sembast/sembast_io.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:task_management/models/task.dart';
 
-class DatabaseHelper {
-  static final _databaseName = "TMSS_Tasks.db";
-  static final _databaseVersion = 1;
+class TaskDatabase {
+  static final TaskDatabase _instance = TaskDatabase._internal();
 
-  static final _table = 'tasks';
+  factory TaskDatabase() => _instance;
 
-  // Singleton pattern: Create a single instance of the DatabaseHelper class
-  static final DatabaseHelper _instance = DatabaseHelper._internal();
-  factory DatabaseHelper() => _instance;
+  TaskDatabase._internal();
 
-  DatabaseHelper._internal();
+  static Database? _database;
 
-  // Getter for the instance
-  static DatabaseHelper get instance => _instance;
+  Future<Database> get database async {
+    if (_database != null) return _database!;
 
-
-  // Updated: Moved _db initialization inside an asynchronous function
-  static Future<Database> get _db async {
-    return openDatabase(
-      join(await getDatabasesPath(), _databaseName),
-      onCreate: (db, version) {
-        return db.execute(
-          'CREATE TABLE $_table(id INTEGER PRIMARY KEY, name TEXT, completed INTEGER)',
-        );
-      },
-      version: _databaseVersion,
-    );
+    _database = await initDatabase();
+    return _database!;
   }
 
-  Future<void> insertTask(Task task) async {
-    final db = await _db;
-    await db.insert(
-      _table,
-      task.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+  Future<Database> initDatabase() async {
+    final appDocumentDir = await getApplicationDocumentsDirectory();
+    final dbPath = join(appDocumentDir.path, 'tasks.db');
+    final database = await databaseFactoryIo.openDatabase(dbPath);
+    return database;
   }
 
-  Future<List<Task>> fetchTasks() async {
-  final db = await _db;
-  final List<Map<String, dynamic>> maps = await db.query(_table);
-  return List.generate(maps.length, (i) {
-    return Task(
-      id: maps[i]['id'],
-      title: maps[i]['title'],
-      isCompleted: maps[i]['completed'] == 1,
-      description: '', 
-      dueDate: DateTime.now(), // You need to provide a default value for DateTime
-       // You need to provide a default value for int
-      attachments: [], 
-      assignedTo: '',
-    );
-  });
+  static TaskDatabase get instance => TaskDatabase();
+
+  Future<void> insertTask(Map<String, dynamic> task) async {
+    final db = await database;
+    final store = intMapStoreFactory.store('tasks');
+    await store.add(db, task);
+  }
+
+ Future<List<Task>> fetchTasks() async {
+  final db = await database;
+  final store = intMapStoreFactory.store('tasks');
+  final records = await store.find(db);
+  return records.map((record) => Task.fromMap(record.value)).toList();
 }
 
-
-  Future<void> updateTask(Task task) async {
-    final db = await _db;
-    await db.update(
-      _table,
-      task.toMap(),
-      where: 'id = ?',
-      whereArgs: [task.id],
-    );
+  Future<void> updateTask(Map<String, dynamic> task) async {
+    final db = await database;
+    final store = intMapStoreFactory.store('tasks');
+    await store.record(task['id']).put(db, task);
   }
 
   Future<void> deleteTask(int id) async {
-    final db = await _db;
-    await db.delete(
-      _table,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final db = await database;
+    final store = intMapStoreFactory.store('tasks');
+    await store.record(id).delete(db);
   }
 }
