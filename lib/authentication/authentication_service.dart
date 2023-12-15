@@ -1,19 +1,21 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:task_management/authentication/user.dart'as custom_user;
+import 'package:task_management/authentication/user.dart' as custom_user;
 
 class AuthenticationService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  User? _currentUser;
   bool _keepSignedIn = false;
 
-  User? get currentUser => _auth.currentUser;
+  User? get currentUser => _currentUser;
 
   bool get keepSignedIn => _keepSignedIn;
 
   set keepSignedIn(bool value) {
     _keepSignedIn = value;
-    _saveKeepSignedInState(value); // Save the state when it changes
+    _saveKeepSignedInState(value);
     notifyListeners();
   }
 
@@ -28,20 +30,21 @@ class AuthenticationService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Stream<User?> get authStateChanges {
+    return _auth.authStateChanges().map((User? user) {
+      _currentUser = user;
+      notifyListeners();
+      return _currentUser;
+    });
+  }
+
   Future<User?> signIn(String email, String password) async {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
-
-      // If the user chooses not to keep signed in, sign them out when the app restarts
-      if (!_keepSignedIn) {
-        await signOut();
-      }
-
-      notifyListeners(); // Notify listeners when the authentication state changes
       return _auth.currentUser;
     } catch (e) {
       print('SignIn Error: $e');
-      throw e; // Propagate the error to handle it in UI
+      throw e;
     }
   }
 
@@ -53,30 +56,28 @@ class AuthenticationService extends ChangeNotifier {
           ? custom_user.User(uid: _auth.currentUser!.uid, email: _auth.currentUser!.email!, role: 'regular')
           : null;
 
-      // If the user chooses not to keep signed in, sign them out when the app restarts
-      if (!_keepSignedIn) {
-        await signOut();
-      }
-
-      notifyListeners(); // Notify listeners when the authentication state changes
+      notifyListeners();
       return customUser;
     } catch (e) {
       print('SignUp Error: $e');
-      throw e; // Propagate the error to handle it in UI
+      throw e;
     }
   }
 
   Future<void> signOut() async {
     try {
       await _auth.signOut();
-      notifyListeners(); // Notify listeners when the authentication state changes
+      _currentUser = null; // Ensure _currentUser is cleared on sign-out
+      notifyListeners();
     } catch (e) {
       print('SignOut Error: $e');
-      throw e; // Propagate the error to handle it in UI
+      throw e;
     }
   }
 
   AuthenticationService() {
-    _loadKeepSignedInState(); // Load the keep signed in state when the AuthenticationService is initialized
+    Future.delayed(Duration.zero, () async {
+      await _loadKeepSignedInState();
+    });
   }
 }

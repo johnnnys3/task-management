@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:task_management/models/project.dart';
 import 'package:task_management/models/task.dart';
-import 'package:task_management/screens/task_details_screen.dart';
+
+import 'package:task_management/screens/task_list_screen.dart';
 
 class ProjectDetailsScreen extends StatelessWidget {
   final Project project;
@@ -78,7 +79,7 @@ class TasksScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TaskDetailsScreen(task: task),
+        builder: (context) => TaskListScreen( userId: '', tasks: [],),
       ),
     );
   }

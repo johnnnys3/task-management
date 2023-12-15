@@ -26,7 +26,7 @@ class TaskManagementScreen extends StatelessWidget {
   void navigateToTaskListScreen(BuildContext context) {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => TaskListScreen(userId: userId)),
+      MaterialPageRoute(builder: (context) => TaskListScreen(userId: userId, tasks: [],)),
     );
   }
 }

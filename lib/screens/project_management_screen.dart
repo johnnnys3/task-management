@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:task_management/models/project.dart';
 import 'package:task_management/screens/project_details_screen.dart';
 import 'package:task_management/screens/create_project_screen.dart';
+import 'package:task_management/screens/update_project_screen.dart';
 
 class ProjectManagementScreen extends StatefulWidget {
   final String userId;
@@ -20,14 +21,7 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Project Management'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () {
-              _navigateToCreateProjectScreen();
-            },
-          ),
-        ],
+        backgroundColor: Colors.blue, // Set your desired app bar background color
       ),
       body: ListView.builder(
         itemCount: projects.length,
@@ -42,6 +36,13 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> {
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _navigateToCreateProjectScreen();
+        },
+        tooltip: 'Create Project',
+        child: Icon(Icons.add),
       ),
     );
   }
@@ -101,9 +102,16 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> {
     );
   }
 
-  void _editProject(Project project) {
-    // Implement the logic to edit the project, e.g., navigate to an edit screen
-  }
+void _editProject(Project project) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => UpdateProjectScreen(project: project),
+    ),
+  );
+}
+
+    
 
   void _deleteProject(Project project) {
     // Implement the logic to delete the project, e.g., remove it from the list

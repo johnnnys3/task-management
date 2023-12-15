@@ -8,7 +8,7 @@ import 'package:task_management/screens/update_task_screen.dart';
 class TaskListScreen extends StatefulWidget {
   final String userId;
 
-  TaskListScreen({required this.userId});
+  TaskListScreen({required this.userId, required List<Task> tasks, });
 
   @override
   _TaskListScreenState createState() => _TaskListScreenState();
