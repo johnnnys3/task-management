@@ -3,46 +3,52 @@ import 'package:flutter/material.dart';
 class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Dashboard'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Task Overview',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints viewportConstraints) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('Dashboard'),
+          ),
+          body: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: viewportConstraints.maxHeight,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Task Overview',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 20),
+                    _buildTaskStats(),
+                    SizedBox(height: 20),
+                    Text(
+                      'Upcoming Deadlines',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    _buildUpcomingDeadlines(),
+                    SizedBox(height: 20),
+                    Text(
+                      'Task Completion Progress',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    _buildTaskCompletionProgress(),
+                    SizedBox(height: 20),
+                    
+                    // Add more widgets as needed for additional dashboard components
+                  ],
+                ),
+              ),
             ),
-            SizedBox(height: 20),
-            _buildTaskStats(),
-            SizedBox(height: 20),
-            Text(
-              'Upcoming Deadlines',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            _buildUpcomingDeadlines(),
-            SizedBox(height: 20),
-            Text(
-              'Task Completion Progress',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            _buildTaskCompletionProgress(),
-            SizedBox(height: 20),
-            Text(
-              'Upcoming Tasks',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            
-            // Add more widgets as needed for additional dashboard components
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -107,7 +113,4 @@ class DashboardScreen extends StatelessWidget {
       ],
     );
   }
-
-
-
 }

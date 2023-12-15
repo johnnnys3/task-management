@@ -38,12 +38,7 @@ class _ReportingScreenState extends State<ReportingScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Reporting'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+       
       ),
       body: SafeArea(
         child: SingleChildScrollView(
