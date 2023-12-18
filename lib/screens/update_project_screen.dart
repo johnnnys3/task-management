@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:task_management/data/database_helper(project).dart';
-// Use 'as' to provide an alias
-
+ // Make sure to import your ProjectDatabase class
 import 'package:task_management/models/project.dart';
 
 class UpdateProjectScreen extends StatefulWidget {
@@ -42,9 +41,8 @@ class _UpdateProjectScreenState extends State<UpdateProjectScreen> {
     );
 
     try {
-      // TODO: Implement logic to update the project in your data storage
-      // For example, if using Firestore, you might call a function like:
-      await ProjectDatabase().updateProject(updatedProject); // Use the alias 'dbHelper'
+      // Update the project in the database
+      await ProjectDatabase().updateProject(updatedProject);
 
       // Pop the screen
       Navigator.pop(context);

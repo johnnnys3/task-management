@@ -1,19 +1,23 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:task_management/models/task.dart';
-
-// Service class to interact with the database or state management
 class TaskService {
-  // Replace this with your actual database or state management logic
-  Future<void> updateTask(Task task) async {
-    // Your logic to update the task in the database or state management
-    // For example, you might use an API call, SQL, or other storage mechanisms
-    await Future.delayed(Duration(seconds: 2)); // Simulating an asynchronous operation
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-    print('Task updated in the database');
+  // Update task in Firestore
+  Future<void> updateTask(Task task) async {
+    try {
+      // Convert the task to a map
+      Map<String, dynamic> taskMap = task.toMap();
+
+      // Update the task in Firestore using the task's ID
+      await _firestore.collection('tasks').doc(task.id.toString()).update(taskMap);
+    } catch (e) {
+      print('Error updating task: $e');
+      throw e;
+    }
   }
 }
-
-// ignore: must_be_immutable
 class UpdateTaskScreen extends StatefulWidget {
   Task task;
 
@@ -70,7 +74,6 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
             SizedBox(height: 32),
             ElevatedButton(
               onPressed: () async {
-                // Implement logic to update the task
                 await updateTask();
               },
               child: Text('Update Task'),
@@ -82,33 +85,27 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
   }
 
   Future<void> updateTask() async {
-    // Retrieve the new values from the text controllers
     String updatedTitle = titleController.text;
     String updatedDescription = descriptionController.text;
 
-    // Create a new Task instance with updated values
     Task updatedTask = Task(
+      id: widget.task.id,
       title: updatedTitle,
       description: updatedDescription,
       dueDate: widget.task.dueDate,
-      
       attachments: widget.task.attachments,
-      assignedTo: widget.task.assignedTo, 
-      id: widget.task.id, 
-      isCompleted: false, 
-      associatedProject: null,
+      assignedTo: widget.task.assignedTo,
+      isCompleted: widget.task.isCompleted,
+      associatedProject: widget.task.associatedProject,
     );
 
-    // Update the existing task in the widget's state
     setState(() {
       widget.task = updatedTask;
     });
 
-    // Save the updated task to the database or use your state management solution
     TaskService taskService = TaskService();
     await taskService.updateTask(widget.task);
 
-    // Navigate back to the task details screen or task list with the updated task
     Navigator.pop(context, widget.task);
   }
 }
