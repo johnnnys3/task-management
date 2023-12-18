@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:task_management/data/database_helper.dart';
-import 'package:task_management/models/task.dart'; // Import the Task model
+import 'package:task_management/data/database_helper(task).dart';
+
 
 class ReportingScreen extends StatefulWidget {
   @override

@@ -26,33 +26,36 @@ class Task {
   });
 
   // Add the fromDocumentSnapshot factory method to convert from DocumentSnapshot to Task
-  factory Task.fromDocumentSnapshot(DocumentSnapshot<Map<String, dynamic>> snapshot) {
-    Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-    return Task(
-      id: data['id'],
-      title: data['title'],
-      description: data['description'],
-      dueDate: DateTime.parse(data['dueDate']),
-     
-      attachments: List<String>.from(data['attachments']),
-      assignedTo: data['assignedTo'],
-      isCompleted: data['isCompleted'] == 1,
-      associatedProject: Project.fromMap(data['associatedProject']), // Convert the associated project map to a Project object
-    );
-  }
+ factory Task.fromDocumentSnapshot(DocumentSnapshot<Map<String, dynamic>> snapshot) {
+  Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+  return Task(
+    id: data['id'],
+    title: data['title'],
+    description: data['description'],
+    dueDate: DateTime.parse(data['dueDate']),
+    attachments: List<String>.from(data['attachments']),
+    assignedTo: data['assignedTo'],
+    isCompleted: data['isCompleted'] == 1,
+    associatedProject: data['associatedProject'] != null
+        ? Project.fromMap(data['associatedProject'], data['associatedProject']['id'])
+        : null,
+  );
+}
 
-  factory Task.fromMap(Map<String, dynamic> map) {
-    return Task(
-      id: map['id'],
-      title: map['title'],
-      description: map['description'],
-      dueDate: DateTime.parse(map['dueDate']),
-      attachments: List<String>.from(map['attachments']),
-      assignedTo: map['assignedTo'],
-      isCompleted: map['isCompleted'] == 1,
-      associatedProject: Project.fromMap(map['associatedProject']), // Convert the associated project map to a Project object
-    );
-  }
+factory Task.fromMap(Map<String, dynamic> map) {
+  return Task(
+    id: map['id'],
+    title: map['title'],
+    description: map['description'],
+    dueDate: DateTime.parse(map['dueDate']),
+    attachments: List<String>.from(map['attachments']),
+    assignedTo: map['assignedTo'],
+    isCompleted: map['isCompleted'] == 1,
+    associatedProject: map['associatedProject'] != null
+        ? Project.fromMap(map['associatedProject'], map['associatedProject']['id'])
+        : null,
+  );
+}
 
   Map<String, dynamic> toMap() {
     return {

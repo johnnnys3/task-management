@@ -1,5 +1,7 @@
-// screens/update_project_screen.dart
 import 'package:flutter/material.dart';
+import 'package:task_management/data/database_helper(project).dart';
+// Use 'as' to provide an alias
+
 import 'package:task_management/models/project.dart';
 
 class UpdateProjectScreen extends StatefulWidget {
@@ -25,7 +27,7 @@ class _UpdateProjectScreenState extends State<UpdateProjectScreen> {
     _dueDate = widget.project.dueDate;
   }
 
-  void _updateProject() {
+  void _updateProject() async {
     // Extract updated project details from controllers
     String updatedName = _nameController.text;
     String updatedDescription = _descriptionController.text;
@@ -35,15 +37,26 @@ class _UpdateProjectScreenState extends State<UpdateProjectScreen> {
       name: updatedName,
       description: updatedDescription,
       dueDate: _dueDate,
-      tasks: widget.project.tasks, id: '', // Assuming you want to keep the existing tasks
+      tasks: widget.project.tasks,
+      id: widget.project.id,
     );
 
-    // TODO: Implement logic to update the project in your data storage
-    // For example, if using Firestore, you might call a function like:
-    //updateProjectInFirestore(widget.project.id, updatedProject);
+    try {
+      // TODO: Implement logic to update the project in your data storage
+      // For example, if using Firestore, you might call a function like:
+      await ProjectDatabase().updateProject(updatedProject); // Use the alias 'dbHelper'
 
-    // Pop the screen
-    Navigator.pop(context);
+      // Pop the screen
+      Navigator.pop(context);
+    } catch (e) {
+      // Handle errors, e.g., show a snackbar or display an error message
+      print('Error updating project: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred. Please try again.'),
+        ),
+      );
+    }
   }
 
   @override

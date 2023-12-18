@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:task_management/data/database_helper(project).dart';
 import 'package:task_management/models/project.dart';
+ // Import your ProjectDatabase
 
 class CreateProjectScreen extends StatefulWidget {
   @override
@@ -11,7 +13,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   final TextEditingController projectDescriptionController = TextEditingController();
   DateTime selectedDueDate = DateTime.now();
 
-  void _createProject(BuildContext context) {
+  void _createProject(BuildContext context) async {
     // Validate input fields
     if (projectNameController.text.isEmpty) {
       // Show an error message or toast
@@ -28,8 +30,20 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
       // Add other fields as needed
     );
 
-    // Pass the new project back to the previous screen
-    Navigator.pop(context, newProject);
+    try {
+      // Save the project to the database
+      await ProjectDatabase().addProject(newProject);
+      // Navigate back to the previous screen
+      Navigator.pop(context, newProject);
+    } catch (e) {
+      // Handle errors, e.g., show a snackbar or display an error message
+      print('Error creating project: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred. Please try again.'),
+        ),
+      );
+    }
   }
 
   @override

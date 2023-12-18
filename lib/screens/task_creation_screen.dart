@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:task_management/data/database_helper(task).dart';
 import 'package:task_management/models/task.dart';
+ // Import your TaskDatabase
 
 class TaskCreationScreen extends StatefulWidget {
   @override
@@ -37,12 +39,24 @@ class _TaskCreationScreenState extends State<TaskCreationScreen> {
       dueDate: selectedDueDate,
       assignedTo: assigneeDetails,
       attachments: [],
-      isCompleted: false, // Set the initial completion status to false
-      associatedProject: null, // Set the associated project to null initially
+      isCompleted: false,
+      associatedProject: null,
     );
 
-    // Pass the new task back to the previous screen
-    Navigator.pop(context, newTask);
+    try {
+      // Save the task to the database
+      await TaskDatabase().insertTask(newTask.toMap());
+      // Navigate back to the previous screen
+      Navigator.pop(context);
+    } catch (e) {
+      // Handle errors, e.g., show a snackbar or display an error message
+      print('Error creating task: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred. Please try again.'),
+        ),
+      );
+    }
   }
 
   @override
@@ -99,7 +113,7 @@ class _TaskCreationScreenState extends State<TaskCreationScreen> {
             // Add UI elements for isCompleted and associatedProject
             CheckboxListTile(
               title: Text('Completed'),
-              value: false, // Set the initial value (modify as needed)
+              value: false,
               onChanged: (value) {
                 // Handle completion status change
               },
