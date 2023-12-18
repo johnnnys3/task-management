@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:task_management/screens/calendar_integration_screen.dart';
 import 'package:task_management/screens/collaboration_screen.dart';
 import 'package:task_management/screens/dashboard_screen.dart';
-import 'package:task_management/screens/messaging_screen.dart';
+
 import 'package:task_management/screens/notification_screen.dart';
 import 'package:task_management/screens/project_management_screen.dart';
 import 'package:task_management/screens/reporting_screen.dart';
@@ -103,8 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return NotificationScreen();
       case 'collaboration':
         return CollaborationScreen();
-      case 'messaging':
-        return MessagingScreen(userId: widget.userId);
+     
       case 'calendar':
         return CalendarIntegrationScreen();
       case 'taskList':

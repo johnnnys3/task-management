@@ -23,11 +23,18 @@ class LoginScreen extends StatelessWidget {
           children: [
             TextField(
               controller: emailController,
-              decoration: InputDecoration(labelText: 'Email'),
+              decoration: InputDecoration(
+                labelText: 'Email',
+                prefixIcon: Icon(Icons.email),
+              ),
             ),
+            SizedBox(height: 16),
             TextField(
               controller: passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(
+                labelText: 'Password',
+                prefixIcon: Icon(Icons.lock),
+              ),
               obscureText: true,
             ),
             SizedBox(height: 16),
@@ -42,6 +49,7 @@ class LoginScreen extends StatelessWidget {
                 Text('Keep me signed in'),
               ],
             ),
+            SizedBox(height: 16),
             ElevatedButton(
               onPressed: () async {
                 final email = emailController.text.trim();
@@ -85,7 +93,7 @@ class LoginScreen extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => RegistrationScreen()),
                 );
               },
-              child: Text('Register'),
+              child: Text('Don\'t have an account? Register here'),
             ),
           ],
         ),

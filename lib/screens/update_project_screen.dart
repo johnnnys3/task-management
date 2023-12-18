@@ -40,7 +40,7 @@ class _UpdateProjectScreenState extends State<UpdateProjectScreen> {
 
     // TODO: Implement logic to update the project in your data storage
     // For example, if using Firestore, you might call a function like:
-    // updateProjectInFirestore(widget.project.id, updatedProject);
+    //updateProjectInFirestore(widget.project.id, updatedProject);
 
     // Pop the screen
     Navigator.pop(context);

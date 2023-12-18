@@ -1,8 +1,6 @@
-import 'package:path/path.dart';
-import 'package:sembast/sembast.dart';
-import 'package:sembast/sembast_io.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:task_management/models/task.dart';
+
 
 class TaskDatabase {
   static final TaskDatabase _instance = TaskDatabase._internal();
@@ -11,46 +9,66 @@ class TaskDatabase {
 
   TaskDatabase._internal();
 
-  static Database? _database;
+  final CollectionReference _tasksCollection = FirebaseFirestore.instance.collection('tasks');
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-
-    _database = await initDatabase();
-    return _database!;
+  // Fetch all tasks
+  Future<List<Task>> fetchTasks() async {
+    try {
+      final tasks = await _tasksCollection.get();
+      return tasks.docs.map((doc) => Task.fromDocumentSnapshot(doc as DocumentSnapshot<Map<String, dynamic>>)).toList();
+    } catch (e) {
+      print('Error fetching tasks: $e');
+      throw e;
+    }
   }
 
-  Future<Database> initDatabase() async {
-    final appDocumentDir = await getApplicationDocumentsDirectory();
-    final dbPath = join(appDocumentDir.path, 'tasks.db');
-    final database = await databaseFactoryIo.openDatabase(dbPath);
-    return database;
+  // Fetch tasks for a specific date
+  Future<List<Task>> fetchTasksForDate(DateTime selectedDate) async {
+    try {
+      QuerySnapshot<Object?> querySnapshot = await _tasksCollection
+          .where('dueDate', isGreaterThanOrEqualTo: selectedDate)
+          .where('dueDate', isLessThan: selectedDate.add(Duration(days: 1)))
+          .get();
+
+      return querySnapshot.docs.map((doc) => Task.fromDocumentSnapshot(doc as DocumentSnapshot<Map<String, dynamic>>)).toList();
+    } catch (e) {
+      print('Error fetching tasks for date: $e');
+      throw e;
+    }
   }
 
-  static TaskDatabase get instance => TaskDatabase();
 
+ 
+
+  // Insert a new task
   Future<void> insertTask(Map<String, dynamic> task) async {
-    final db = await database;
-    final store = intMapStoreFactory.store('tasks');
-    await store.add(db, task);
+    try {
+      await _tasksCollection.add(task);
+    } catch (e) {
+      print('Error inserting task: $e');
+      throw e;
+    }
   }
 
- Future<List<Task>> fetchTasks() async {
-  final db = await database;
-  final store = intMapStoreFactory.store('tasks');
-  final records = await store.find(db);
-  return records.map((record) => Task.fromMap(record.value)).toList();
-}
-
-  Future<void> updateTask(Map<String, dynamic> task) async {
-    final db = await database;
-    final store = intMapStoreFactory.store('tasks');
-    await store.record(task['id']).put(db, task);
+  // Update an existing task
+  Future<void> updateTask(String taskId, Map<String, dynamic> task) async {
+    try {
+      await _tasksCollection.doc(taskId).update(task);
+    } catch (e) {
+      print('Error updating task: $e');
+      throw e;
+    }
   }
 
-  Future<void> deleteTask(int id) async {
-    final db = await database;
-    final store = intMapStoreFactory.store('tasks');
-    await store.record(id).delete(db);
+  // Delete a task
+  Future<void> deleteTask(String taskId) async {
+    try {
+      await _tasksCollection.doc(taskId).delete();
+    } catch (e) {
+      print('Error deleting task: $e');
+      throw e;
+    }
   }
+
+  // Add a message to the task's messages collection
 }

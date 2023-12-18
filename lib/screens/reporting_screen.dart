@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:task_management/data/database_helper.dart';
+import 'package:task_management/models/task.dart'; // Import the Task model
 
 class ReportingScreen extends StatefulWidget {
   @override
@@ -11,6 +13,8 @@ class _ReportingScreenState extends State<ReportingScreen> {
   int _completedTasks = 0;
   int _pendingTasks = 0;
 
+  final TaskDatabase _taskDatabase = TaskDatabase();
+
   @override
   void initState() {
     super.initState();
@@ -19,13 +23,12 @@ class _ReportingScreenState extends State<ReportingScreen> {
 
   Future<void> _fetchTasks() async {
     try {
-      final tasks = await FirebaseFirestore.instance.collection('tasks').get();
-      final List<DocumentSnapshot> docs = tasks.docs;
+      final tasks = await _taskDatabase.fetchTasks();
 
       setState(() {
-        _totalTasks = docs.length;
-        _completedTasks = docs.where((doc) => doc['isCompleted'] == true).length;
-        _pendingTasks = docs.where((doc) => doc['isCompleted'] == false).length;
+        _totalTasks = tasks.length;
+        _completedTasks = tasks.where((task) => task.isCompleted).length;
+        _pendingTasks = tasks.where((task) => !task.isCompleted).length;
       });
     } catch (e) {
       // Handle any errors here, e.g., log the error
@@ -38,7 +41,6 @@ class _ReportingScreenState extends State<ReportingScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Reporting'),
-       
       ),
       body: SafeArea(
         child: SingleChildScrollView(
