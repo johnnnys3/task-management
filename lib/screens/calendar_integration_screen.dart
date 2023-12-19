@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:task_management/models/task.dart'; // Import your Task model
-import 'package:task_management/data/database_helper(task).dart'; // Import your TaskDatabase class
+import 'package:task_management/data/database_helper(task).dart';
+import 'package:task_management/models/task.dart';
 
 class CalendarIntegrationScreen extends StatefulWidget {
   @override
@@ -32,24 +32,30 @@ class _CalendarIntegrationScreenState extends State<CalendarIntegrationScreen> {
             focusedDay: _selectedDay,
             firstDay: DateTime(2023, 1, 1),
             lastDay: DateTime(2023, 12, 31),
+            calendarStyle: CalendarStyle(
+              selectedDecoration: BoxDecoration(
+                color: Colors.orange,
+                shape: BoxShape.circle,
+              ),
+              todayDecoration: BoxDecoration(
+                color: Colors.black,
+                shape: BoxShape.circle,
+              ),
+              outsideDaysVisible: false,
+            ),
           ),
           SizedBox(height: 20),
           Expanded(
             child: FutureBuilder<List<Task>>(
-              // Fetch tasks from the database for the selected day
               future: taskDatabase.fetchTasksForDate(_selectedDay),
               builder: (BuildContext context, AsyncSnapshot<List<Task>> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  // Display a loading indicator while data is being fetched
                   return CircularProgressIndicator();
                 } else if (snapshot.hasError) {
-                  // Handle error case
                   return Text('Error: ${snapshot.error}');
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  // Handle case where no tasks are available for the selected day
                   return Text('No tasks available for the selected day.');
                 } else {
-                  // Display the tasks for the selected day
                   List<Task>? tasks = snapshot.data;
 
                   return ListView.builder(
@@ -59,8 +65,6 @@ class _CalendarIntegrationScreenState extends State<CalendarIntegrationScreen> {
                       return ListTile(
                         title: Text(task.title),
                         subtitle: Text('Due Date: ${task.dueDate}'),
-                        // Add additional details as needed
-                        // You can also add buttons to mark tasks as completed or delete them
                       );
                     },
                   );

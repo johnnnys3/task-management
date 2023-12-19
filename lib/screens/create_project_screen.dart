@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:task_management/data/database_helper(project).dart';
 import 'package:task_management/models/project.dart';
- // Import your ProjectDatabase
 
 class CreateProjectScreen extends StatefulWidget {
   @override
@@ -24,8 +23,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
     Project newProject = Project(
       name: projectNameController.text,
       description: projectDescriptionController.text,
-      dueDate: selectedDueDate, 
-      tasks: [], 
+      dueDate: selectedDueDate,
+      tasks: [],
       id: '',
       // Add other fields as needed
     );
@@ -51,6 +50,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Create Project'),
+        backgroundColor: Colors.orange, // Set the app bar background color to black
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -59,18 +59,24 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
           children: [
             TextField(
               controller: projectNameController,
-              decoration: InputDecoration(labelText: 'Project Name'),
+              decoration: InputDecoration(
+                labelText: 'Project Name',
+                labelStyle: TextStyle(color: Colors.orange), // Set label text color to orange
+              ),
             ),
             SizedBox(height: 16),
             TextField(
               controller: projectDescriptionController,
-              decoration: InputDecoration(labelText: 'Project Description'),
+              decoration: InputDecoration(
+                labelText: 'Project Description',
+                labelStyle: TextStyle(color: Colors.orange), // Set label text color to orange
+              ),
             ),
             SizedBox(height: 16),
             // Due Date Picker
             Row(
               children: [
-                Text('Due Date: '),
+                Text('Due Date: ', style: TextStyle(color: Colors.orange)), // Set text color to orange
                 SizedBox(width: 8),
                 TextButton(
                   onPressed: () async {
@@ -88,7 +94,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   },
                   child: Text(
                     "${selectedDueDate.toLocal()}".split(' ')[0],
-                    style: TextStyle(color: Colors.blue),
+                    style: TextStyle(color: Colors.white), // Set text color to white
                   ),
                 ),
               ],
@@ -98,6 +104,9 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               onPressed: () {
                 _createProject(context);
               },
+              style: ElevatedButton.styleFrom(
+                primary: Colors.orange, // Set button background color to orange
+              ),
               child: Text('Create Project'),
             ),
           ],

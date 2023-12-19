@@ -21,13 +21,16 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Project Management'),
-        backgroundColor: Colors.blue, // Set your desired app bar background color
+        backgroundColor: Colors.orange, // Set your desired app bar background color to orange
       ),
       body: ListView.builder(
         itemCount: projects.length,
         itemBuilder: (context, index) {
           return ListTile(
-            title: Text(projects[index].name),
+            title: Text(
+              projects[index].name,
+              style: TextStyle(color: Colors.black), // Set text color to black
+            ),
             onTap: () {
               _navigateToProjectDetailsScreen(projects[index]);
             },
@@ -43,6 +46,7 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> {
         },
         tooltip: 'Create Project',
         child: Icon(Icons.add),
+        backgroundColor: Colors.orange, // Set FAB background color to orange
       ),
     );
   }
@@ -102,16 +106,14 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> {
     );
   }
 
-void _editProject(Project project) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => UpdateProjectScreen(project: project),
-    ),
-  );
-}
-
-    
+  void _editProject(Project project) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UpdateProjectScreen(project: project),
+      ),
+    );
+  }
 
   void _deleteProject(Project project) {
     // Implement the logic to delete the project, e.g., remove it from the list

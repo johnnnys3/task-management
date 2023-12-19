@@ -15,7 +15,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Notifications'),
+        title: Text('Notifications', style: TextStyle(color: Colors.white)), // Set app bar text color to white
+        backgroundColor: Colors.orange, // Set app bar background color to black
       ),
       body: FutureBuilder<List<Task>>(
         // Fetch tasks from the database to simulate notifications
@@ -26,10 +27,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
             return CircularProgressIndicator();
           } else if (snapshot.hasError) {
             // Handle error case
-            return Text('Error: ${snapshot.error}');
+            return Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.orange)); // Set text color to orange
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             // Handle case where no tasks are available
-            return Text('No notifications available.');
+            return Text('No notifications available.', style: TextStyle(color: Colors.white)); // Set text color to white
           } else {
             // Display a list of notifications based on tasks
             List<Task> tasks = snapshot.data!;
@@ -38,8 +39,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
               itemBuilder: (context, index) {
                 Task task = tasks[index];
                 return ListTile(
-                  title: Text('Task: ${task.title}'),
-                  subtitle: Text('Due Date: ${task.dueDate}'),
+                  title: Text('Task: ${task.title}', style: TextStyle(color: Colors.orange)), // Set text color to orange
+                  subtitle: Text('Due Date: ${task.dueDate}', style: TextStyle(color: Colors.white)), // Set text color to white
                   onTap: () {
                     // Handle tapping on a notification
                     _navigateToTaskDetails(task);

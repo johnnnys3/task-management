@@ -7,7 +7,6 @@ import 'package:task_management/screens/home_screen.dart';
 import 'package:task_management/screens/login_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await FirebaseConfig.initialize(); // Initialize Firebase
@@ -23,7 +22,10 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Task Management App',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primarySwatch: Colors.orange, // Set primary color to orange
+          primaryColor: Colors.orange, // Set primary color to orange
+          hintColor: Colors.black, // Set accent color to black
+          scaffoldBackgroundColor: Colors.white, // Set scaffold background color to white
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
         home: AuthenticationWrapper(),
