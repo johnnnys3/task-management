@@ -13,41 +13,50 @@ class ProjectManagementScreen extends StatefulWidget {
   _ProjectManagementScreenState createState() => _ProjectManagementScreenState();
 }
 
-class _ProjectManagementScreenState extends State<ProjectManagementScreen> {
+class _ProjectManagementScreenState extends State<ProjectManagementScreen> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   List<Project> projects = []; // Populate this list with projects from Firestore or another database
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Make sure to call super.build
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Project Management'),
-        backgroundColor: Colors.orange, // Set your desired app bar background color to orange
+        backgroundColor: Colors.orange,
       ),
-      body: ListView.builder(
-        itemCount: projects.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(
-              projects[index].name,
-              style: TextStyle(color: Colors.black), // Set text color to black
-            ),
-            onTap: () {
-              _navigateToProjectDetailsScreen(projects[index]);
-            },
-            onLongPress: () {
-              _showOptionsDialog(projects[index]);
-            },
-          );
-        },
-      ),
+      body: _buildProjectList(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _navigateToCreateProjectScreen();
         },
         tooltip: 'Create Project',
         child: Icon(Icons.add),
-        backgroundColor: Colors.orange, // Set FAB background color to orange
+        backgroundColor: Colors.orange,
       ),
+    );
+  }
+
+  Widget _buildProjectList() {
+    return ListView.builder(
+      itemCount: projects.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(
+            projects[index].name,
+            style: TextStyle(color: Colors.black),
+          ),
+          onTap: () {
+            _navigateToProjectDetailsScreen(projects[index]);
+          },
+          onLongPress: () {
+            _showOptionsDialog(projects[index]);
+          },
+        );
+      },
     );
   }
 

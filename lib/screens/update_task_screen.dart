@@ -1,23 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
 import 'package:task_management/models/task.dart';
-class TaskService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+import 'package:task_management/service/task_service.dart';
 
-  // Update task in Firestore
-  Future<void> updateTask(Task task) async {
-    try {
-      // Convert the task to a map
-      Map<String, dynamic> taskMap = task.toMap();
-
-      // Update the task in Firestore using the task's ID
-      await _firestore.collection('tasks').doc(task.id.toString()).update(taskMap);
-    } catch (e) {
-      print('Error updating task: $e');
-      throw e;
-    }
-  }
-}
+// ignore: must_be_immutable
 class UpdateTaskScreen extends StatefulWidget {
   Task task;
 
@@ -104,7 +90,8 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
     });
 
     TaskService taskService = TaskService();
-    await taskService.updateTask(widget.task);
+    await taskService.updateTask( task: widget.task, taskId: '');
+
 
     Navigator.pop(context, widget.task);
   }

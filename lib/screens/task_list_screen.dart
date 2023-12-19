@@ -1,24 +1,49 @@
-// screens/task_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:task_management/models/task.dart';
 import 'package:task_management/screens/task_details_screen.dart';
 import 'package:task_management/screens/task_creation_screen.dart';
 import 'package:task_management/screens/update_task_screen.dart';
+import 'package:task_management/service/task_service.dart'; // Import your actual task service
 
 class TaskListScreen extends StatefulWidget {
   final String userId;
 
-  TaskListScreen({required this.userId, required List<Task> tasks, });
+  TaskListScreen({required this.userId, required List tasks});
 
   @override
   _TaskListScreenState createState() => _TaskListScreenState();
 }
 
-class _TaskListScreenState extends State<TaskListScreen> {
-  List<Task> tasks = []; // Populate this list with tasks from Firestore or another database
+class _TaskListScreenState extends State<TaskListScreen> with AutomaticKeepAliveClientMixin {
+  List<Task> tasks = [];
+  TaskService taskService = TaskService(); // Replace with your actual task service
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize tasks from the database
+    loadTasks();
+  }
+
+  Future<void> loadTasks() async {
+    try {
+      List<Task> loadedTasks = await taskService.getTasks(userId: widget.userId);
+      setState(() {
+        tasks = loadedTasks;
+      });
+    } catch (e) {
+      print('Error loading tasks: $e');
+      // Handle error loading tasks
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Task List'),
@@ -48,9 +73,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
           );
 
           if (newTask != null) {
-            setState(() {
-              tasks.add(newTask);
-            });
+            addTask(newTask);
           }
         },
         child: Icon(Icons.add),
@@ -72,11 +95,30 @@ class _TaskListScreenState extends State<TaskListScreen> {
     );
   }
 
-  void deleteTask(Task task) {
-    setState(() {
-      tasks.remove(task);
-    });
-    // You may also want to delete the task from the database if applicable
+  void addTask(Task newTask) async {
+    try {
+      // Add the new task to the database
+      await taskService.addTask(userId: widget.userId, task: newTask);
+
+      // Reload tasks from the database
+      await loadTasks();
+    } catch (e) {
+      print('Error adding task: $e');
+      // Handle error adding task
+    }
+  }
+
+  void deleteTask(Task task) async {
+    try {
+      // Delete the task from the database
+      await taskService.deleteTask(userId: widget.userId, taskId: task.id as String);
+
+      // Reload tasks from the database
+      await loadTasks();
+    } catch (e) {
+      print('Error deleting task: $e');
+      // Handle error deleting task
+    }
   }
 }
 

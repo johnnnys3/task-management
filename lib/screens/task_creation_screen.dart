@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:task_management/data/database_helper(task).dart';
 import 'package:task_management/models/task.dart';
- // Import your TaskDatabase
 
 class TaskCreationScreen extends StatefulWidget {
   @override
@@ -9,53 +8,71 @@ class TaskCreationScreen extends StatefulWidget {
 }
 
 class _TaskCreationScreenState extends State<TaskCreationScreen> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   DateTime selectedDueDate = DateTime.now();
-  String selectedAssignee = ''; // Assignee user ID
+  String selectedAssignee = '';
+  bool isLoading = false;
 
   // Counter to keep track of the last assigned ID
   int _lastId = 0;
 
-  // Mock function to simulate fetching assignee details from the company database
-  Future<String> fetchAssigneeDetails() async {
-    // Simulate an asynchronous call (replace this with your actual implementation)
+  // Mock function to simulate fetching assignee details from the work database
+  Future<String> fetchAssigneeFromWorkDatabase() async {
+    // Simulate an asynchronous call to your work database API
+    // Replace this with your actual implementation
     await Future.delayed(Duration(seconds: 2));
-    return 'Assignee from Company Database';
+    return 'Assignee from Work Database';
   }
 
+  // Method to create a task
   void _createTask(BuildContext context) async {
-    // Increment the counter for a new unique ID
-    _lastId++;
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        isLoading = true;
+      });
 
-    // Fetch assignee details asynchronously
-    String assigneeDetails = await fetchAssigneeDetails();
+      // Increment the counter for a new unique ID
+      _lastId++;
 
-    // Create the task
-    Task newTask = Task(
-      id: _lastId,
-      title: titleController.text,
-      description: descriptionController.text,
-      dueDate: selectedDueDate,
-      assignedTo: assigneeDetails,
-      attachments: [],
-      isCompleted: false,
-      associatedProject: null,
-    );
+      // Fetch assignee details asynchronously
+      String assigneeDetails = await fetchAssigneeFromWorkDatabase();
 
-    try {
-      // Save the task to the database
-      await TaskDatabase().insertTask(newTask.toMap());
-      // Navigate back to the previous screen
-      Navigator.pop(context);
-    } catch (e) {
-      // Handle errors, e.g., show a snackbar or display an error message
-      print('Error creating task: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('An error occurred. Please try again.'),
-        ),
+      // Create the task
+      Task newTask = Task(
+        id: _lastId,
+        title: titleController.text,
+        description: descriptionController.text,
+        dueDate: selectedDueDate,
+        assignedTo: assigneeDetails,
+        attachments: [],
+        isCompleted: false,
+        associatedProject: null,
       );
+
+      try {
+        // Save the task to the database
+        await TaskDatabase().insertTask(newTask.toMap());
+
+        // Optionally, you can print a success message
+        print('Task created successfully.');
+
+        // Navigate back to the previous screen
+        Navigator.pop(context);
+      } catch (e) {
+        // Handle errors, e.g., show a snackbar or display an error message
+        print('Error creating task: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('An error occurred. Please try again.'),
+          ),
+        );
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -65,71 +82,81 @@ class _TaskCreationScreenState extends State<TaskCreationScreen> {
       appBar: AppBar(
         title: Text('Create Task'),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: InputDecoration(labelText: 'Title'),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: descriptionController,
-              decoration: InputDecoration(labelText: 'Description'),
-            ),
-            SizedBox(height: 16),
-            // Due Date Picker
-            Row(
-              children: [
-                Text('Due Date: '),
-                SizedBox(width: 8),
-                TextButton(
-                  onPressed: () async {
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDueDate,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2101),
-                    );
-                    if (pickedDate != null && pickedDate != selectedDueDate) {
-                      setState(() {
-                        selectedDueDate = pickedDate;
-                      });
-                    }
-                  },
-                  child: Text(
-                    "${selectedDueDate.toLocal()}".split(' ')[0],
-                    style: TextStyle(color: Colors.blue),
-                  ),
+      body: isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : SingleChildScrollView(
+              padding: EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: titleController,
+                      decoration: InputDecoration(
+                        labelText: 'Title',
+                      ),
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) {
+                          return 'Please enter a title';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 16),
+                    TextFormField(
+                      controller: descriptionController,
+                      decoration: InputDecoration(
+                        labelText: 'Description',
+                      ),
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) {
+                          return 'Please enter a description';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 16),
+                    // Due Date Picker
+                    Row(
+                      children: [
+                        Text('Due Date: '),
+                        SizedBox(width: 8),
+                        TextButton(
+                          onPressed: () async {
+                            DateTime? pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: selectedDueDate,
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2101),
+                            );
+                            if (pickedDate != null &&
+                                pickedDate != selectedDueDate) {
+                              setState(() {
+                                selectedDueDate = pickedDate;
+                              });
+                            }
+                          },
+                          child: Text(
+                            "${selectedDueDate.toLocal()}".split(' ')[0],
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        _createTask(context);
+                      },
+                      child: Text('Create Task'),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-            SizedBox(height: 16),
-            // Display the selected assignee
-            Text('Assignee: $selectedAssignee'),
-            SizedBox(height: 16),
-            // Add UI elements for isCompleted and associatedProject
-            CheckboxListTile(
-              title: Text('Completed'),
-              value: false,
-              onChanged: (value) {
-                // Handle completion status change
-              },
-            ),
-            // UI for selecting the associated project can be added here
-            SizedBox(height: 16),
-            // Add more fields (e.g., priority, other fields)
-            ElevatedButton(
-              onPressed: () {
-                _createTask(context);
-              },
-              child: Text('Create Task'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

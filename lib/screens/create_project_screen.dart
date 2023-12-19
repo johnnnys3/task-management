@@ -13,36 +13,42 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   DateTime selectedDueDate = DateTime.now();
 
   void _createProject(BuildContext context) async {
-    // Validate input fields
-    if (projectNameController.text.isEmpty) {
-      // Show an error message or toast
-      return;
-    }
-
-    // Create a new project
-    Project newProject = Project(
-      name: projectNameController.text,
-      description: projectDescriptionController.text,
-      dueDate: selectedDueDate,
-      tasks: [],
-      id: '',
-      // Add other fields as needed
-    );
-
-    try {
-      // Save the project to the database
-      await ProjectDatabase().addProject(newProject);
-      // Navigate back to the previous screen
-      Navigator.pop(context, newProject);
-    } catch (e) {
-      // Handle errors, e.g., show a snackbar or display an error message
-      print('Error creating project: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('An error occurred. Please try again.'),
-        ),
+    if (_validateInput()) {
+      Project newProject = Project(
+        name: projectNameController.text,
+        description: projectDescriptionController.text,
+        dueDate: selectedDueDate,
+        tasks: [],
+        id: '',
+        // Add other fields as needed
       );
+
+      try {
+        await ProjectDatabase().addProject(newProject);
+        Navigator.pop(context, newProject);
+      } catch (e) {
+        _showErrorSnackbar(context, 'An error occurred. Please try again.');
+        print('Error creating project: $e');
+      }
     }
+  }
+
+  bool _validateInput() {
+    if (projectNameController.text.isEmpty) {
+      _showErrorSnackbar(context, 'Project name cannot be empty.');
+      return false;
+    }
+    // Add more validation as needed
+    return true;
+  }
+
+  void _showErrorSnackbar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override
@@ -50,7 +56,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Create Project'),
-        backgroundColor: Colors.orange, // Set the app bar background color to black
+        backgroundColor: Theme.of(context).primaryColor, // Use ThemeData for styling
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -61,7 +67,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               controller: projectNameController,
               decoration: InputDecoration(
                 labelText: 'Project Name',
-                labelStyle: TextStyle(color: Colors.orange), // Set label text color to orange
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
               ),
             ),
             SizedBox(height: 16),
@@ -69,14 +75,14 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               controller: projectDescriptionController,
               decoration: InputDecoration(
                 labelText: 'Project Description',
-                labelStyle: TextStyle(color: Colors.orange), // Set label text color to orange
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
               ),
             ),
             SizedBox(height: 16),
             // Due Date Picker
             Row(
               children: [
-                Text('Due Date: ', style: TextStyle(color: Colors.orange)), // Set text color to orange
+                Text('Due Date: ', style: TextStyle(color: Theme.of(context).primaryColor)),
                 SizedBox(width: 8),
                 TextButton(
                   onPressed: () async {
@@ -94,7 +100,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   },
                   child: Text(
                     "${selectedDueDate.toLocal()}".split(' ')[0],
-                    style: TextStyle(color: Colors.white), // Set text color to white
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
               ],
@@ -105,7 +111,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                 _createProject(context);
               },
               style: ElevatedButton.styleFrom(
-                primary: Colors.orange, // Set button background color to orange
+                primary: Theme.of(context).primaryColor,
               ),
               child: Text('Create Project'),
             ),
