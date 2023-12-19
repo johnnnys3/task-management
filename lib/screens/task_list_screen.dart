@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:task_management/authentication/user.dart';
 import 'package:task_management/models/task.dart';
 import 'package:task_management/screens/task_details_screen.dart';
 import 'package:task_management/screens/task_creation_screen.dart';
@@ -7,8 +9,10 @@ import 'package:task_management/service/task_service.dart'; // Import your actua
 
 class TaskListScreen extends StatefulWidget {
   final String userId;
+  final CustomUser user; // Pass the user information
+  final bool isAdmin;
 
-  TaskListScreen({required this.userId, required List tasks});
+  TaskListScreen({required this.userId, required this.user, required this.isAdmin, required List tasks});
 
   @override
   _TaskListScreenState createState() => _TaskListScreenState();
@@ -56,28 +60,26 @@ class _TaskListScreenState extends State<TaskListScreen> with AutomaticKeepAlive
             onTaskTap: () {
               navigateToTaskDetailsScreen(tasks[index]);
             },
-            onUpdateTask: (task) {
-              navigateToUpdateTaskScreen(task);
-            },
-            onDeleteTask: (task) {
-              deleteTask(task);
-            },
+            onUpdateTask: widget.isAdmin ? (task) => navigateToUpdateTaskScreen(task) : null,
+            onDeleteTask: widget.isAdmin ? (task) => deleteTask(task) : null,
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          Task? newTask = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => TaskCreationScreen()),
-          );
+      floatingActionButton: widget.isAdmin
+          ? FloatingActionButton(
+              onPressed: () async {
+                Task? newTask = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => TaskCreationScreen()),
+                );
 
-          if (newTask != null) {
-            addTask(newTask);
-          }
-        },
-        child: Icon(Icons.add),
-      ),
+                if (newTask != null) {
+                  addTask(newTask);
+                }
+              },
+              child: Icon(Icons.add),
+            )
+          : null,
     );
   }
 
@@ -125,8 +127,8 @@ class _TaskListScreenState extends State<TaskListScreen> with AutomaticKeepAlive
 class TaskListItem extends StatelessWidget {
   final Task task;
   final VoidCallback onTaskTap;
-  final Function(Task) onUpdateTask;
-  final Function(Task) onDeleteTask;
+  final Function(Task)? onUpdateTask;
+  final Function(Task)? onDeleteTask;
 
   TaskListItem({
     required this.task,
@@ -142,7 +144,9 @@ class TaskListItem extends StatelessWidget {
       subtitle: Text(task.description),
       onTap: onTaskTap,
       onLongPress: () {
-        _showTaskOptionsDialog(context);
+        if (onUpdateTask != null || onDeleteTask != null) {
+          _showTaskOptionsDialog(context);
+        }
       },
     );
   }
@@ -152,26 +156,28 @@ class TaskListItem extends StatelessWidget {
       context: context,
       position: RelativeRect.fromLTRB(0, 0, 0, 0),
       items: [
-        PopupMenuItem(
-          value: 'update',
-          child: ListTile(
-            title: Text('Update Task'),
-            onTap: () {
-              Navigator.pop(context);
-              onUpdateTask(task);
-            },
+        if (onUpdateTask != null)
+          PopupMenuItem(
+            value: 'update',
+            child: ListTile(
+              title: Text('Update Task'),
+              onTap: () {
+                Navigator.pop(context);
+                onUpdateTask!(task);
+              },
+            ),
           ),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: ListTile(
-            title: Text('Delete Task'),
-            onTap: () {
-              Navigator.pop(context);
-              onDeleteTask(task);
-            },
+        if (onDeleteTask != null)
+          PopupMenuItem(
+            value: 'delete',
+            child: ListTile(
+              title: Text('Delete Task'),
+              onTap: () {
+                Navigator.pop(context);
+                onDeleteTask!(task);
+              },
+            ),
           ),
-        ),
       ],
     );
   }

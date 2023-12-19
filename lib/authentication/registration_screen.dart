@@ -1,11 +1,19 @@
+// registration_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:task_management/authentication/authentication_service.dart';
-import 'package:task_management/screens/home_screen.dart';
+import 'package:task_management/screens/login_screen.dart';
 
-class RegistrationScreen extends StatelessWidget {
+class RegistrationScreen extends StatefulWidget {
+  @override
+  _RegistrationScreenState createState() => _RegistrationScreenState();
+}
+
+class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool isAdmin = false;
+  bool isRegular = true; // Set a default role
 
   @override
   Widget build(BuildContext context) {
@@ -27,24 +35,57 @@ class RegistrationScreen extends StatelessWidget {
               decoration: InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
+            Row(
+              children: [
+                Checkbox(
+                  value: isAdmin,
+                  onChanged: (value) {
+                    setState(() {
+                      isAdmin = value!;
+                      if (value) {
+                        isRegular = false; // Uncheck regular if admin is checked
+                      }
+                    });
+                  },
+                ),
+                Text('Admin'),
+              ],
+            ),
+            Row(
+              children: [
+                Checkbox(
+                  value: isRegular,
+                  onChanged: (value) {
+                    setState(() {
+                      isRegular = value!;
+                      if (value) {
+                        isAdmin = false; // Uncheck admin if regular is checked
+                      }
+                    });
+                  },
+                ),
+                Text('Regular'),
+              ],
+            ),
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: () async {
                 final email = emailController.text.trim();
                 final password = passwordController.text.trim();
+                final role = isAdmin ? 'admin' : 'regular'; // Determine the role
 
                 final authService =
                     Provider.of<AuthenticationService>(context, listen: false);
 
                 try {
-                  // Sign up with email and password
-                  final user = await authService.signUp(email, password);
+                  // Sign up with email, password, and role
+                  final user = await authService.signUp(email, password, role);
 
                   if (user != null) {
-                    // Registration successful, navigate to the home screen
+                    // Registration successful, navigate back to login page
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => HomeScreen(userId: user.uid)),
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
                     );
                   } else {
                     // Show error message

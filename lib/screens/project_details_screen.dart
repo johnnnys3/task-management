@@ -1,7 +1,10 @@
+// project_details_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:task_management/authentication/authentication_service.dart';
+import 'package:task_management/authentication/user.dart';
 import 'package:task_management/models/project.dart';
 import 'package:task_management/models/task.dart';
-
 import 'package:task_management/screens/task_list_screen.dart';
 
 class ProjectDetailsScreen extends StatelessWidget {
@@ -41,19 +44,27 @@ class ProjectDetailsScreen extends StatelessWidget {
   }
 
   void _navigateToTasksScreen(BuildContext context, List<Task> tasks) {
+    AuthenticationService authService = Provider.of<AuthenticationService>(context, listen: false);
+    CustomUser currentUser = authService.currentUser!; // Assuming currentUser is non-nullable
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TasksScreen(tasks: tasks),
+        builder: (context) => TasksScreen(tasks: tasks, authService: authService, user: currentUser),
       ),
     );
   }
 }
 
+
+
+
 class TasksScreen extends StatelessWidget {
   final List<Task> tasks;
+  final AuthenticationService authService;
+  final CustomUser user;
 
-  TasksScreen({required this.tasks});
+  TasksScreen({required this.tasks, required this.authService, required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -79,8 +90,15 @@ class TasksScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TaskListScreen( userId: '', tasks: [],),
+        builder: (context) => TaskListScreen(
+          userId: authService.currentUser?.uid ?? '',
+          tasks: [task],
+          isAdmin: authService.isAdmin,
+          user: user,
+        ),
       ),
     );
   }
 }
+
+

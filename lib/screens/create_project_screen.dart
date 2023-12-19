@@ -100,7 +100,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   },
                   child: Text(
                     "${selectedDueDate.toLocal()}".split(' ')[0],
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.orange),
                   ),
                 ),
               ],

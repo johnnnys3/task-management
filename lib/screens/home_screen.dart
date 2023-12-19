@@ -1,36 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:task_management/authentication/authentication_service.dart';
+import 'package:task_management/authentication/user.dart';
 import 'package:task_management/screens/calendar_integration_screen.dart';
 import 'package:task_management/screens/dashboard_screen.dart';
+import 'package:task_management/screens/login_screen.dart';
 import 'package:task_management/screens/notification_screen.dart';
 import 'package:task_management/screens/project_management_screen.dart';
 import 'package:task_management/screens/reporting_screen.dart';
 import 'package:task_management/screens/search_screen.dart';
 import 'package:task_management/screens/task_list_screen.dart';
 
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Task Management',
-      home: HomeScreen(userId: ''),
-    );
-  }
-}
-
 class HomeScreen extends StatefulWidget {
   final String userId;
+  final CustomUser user;
+  final bool isAdmin;
 
-  HomeScreen({required this.userId});
+  HomeScreen({required this.userId, required this.user, required this.isAdmin});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late AuthenticationService authService;
+
+  @override
+  void initState() {
+    super.initState();
+    authService = Provider.of<AuthenticationService>(context, listen: false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -39,10 +39,11 @@ class _HomeScreenState extends State<HomeScreen> {
         appBar: AppBar(
           title: Text('Task Management'),
           actions: [
+            if (widget.isAdmin)
+              _buildIconButton(Icons.business, 'projectManagement'),
             _buildIconButton(Icons.notifications, 'notification'),
             _buildIconButton(Icons.calendar_today, 'calendar'),
             _buildIconButton(Icons.assignment, 'taskList'),
-            _buildIconButton(Icons.business, 'projectManagement'),
             IconButton(
               icon: Icon(Icons.search),
               onPressed: () {
@@ -50,6 +51,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   context,
                   MaterialPageRoute(builder: (context) => SearchScreen()),
                 );
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.logout),
+              onPressed: () {
+                _logout();
               },
             ),
           ],
@@ -89,14 +96,22 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'calendar':
         return CalendarIntegrationScreen();
       case 'taskList':
-        return TaskListScreen(userId: widget.userId, tasks: []);
+        return TaskListScreen(userId: widget.userId, tasks: [], user: widget.user, isAdmin: widget.isAdmin);
       case 'projectManagement':
-        return ProjectManagementScreen(userId: '');
+        return ProjectManagementScreen(userId: widget.userId, isAdmin: widget.isAdmin, user: widget.user);
       default:
         return Scaffold(
           appBar: AppBar(title: Text('Error')),
           body: Center(child: Text('Invalid route name')),
         );
     }
+  }
+
+  void _logout() async {
+    await authService.signOut();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
   }
 }

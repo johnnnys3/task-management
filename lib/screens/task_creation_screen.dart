@@ -12,7 +12,6 @@ class _TaskCreationScreenState extends State<TaskCreationScreen> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   DateTime selectedDueDate = DateTime.now();
-  String selectedAssignee = '';
   bool isLoading = false;
 
   // Counter to keep track of the last assigned ID
@@ -41,19 +40,19 @@ class _TaskCreationScreenState extends State<TaskCreationScreen> {
 
       // Create the task
       Task newTask = Task(
-        id: _lastId,
+        id: _lastId.toString(),
         title: titleController.text,
         description: descriptionController.text,
         dueDate: selectedDueDate,
         assignedTo: assigneeDetails,
         attachments: [],
         isCompleted: false,
-        associatedProject: null,
+        associatedProject: null, // You might need to update this based on your project structure
       );
 
       try {
         // Save the task to the database
-        await TaskDatabase().insertTask(newTask.toMap());
+        await TaskDatabase().insertTask(newTask);
 
         // Optionally, you can print a success message
         print('Task created successfully.');
@@ -76,6 +75,23 @@ class _TaskCreationScreenState extends State<TaskCreationScreen> {
     }
   }
 
+  // Widget to display the loading spinner
+  Widget _buildLoadingWidget() {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  // Method to show an error snackbar
+  void _showErrorSnackbar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,9 +99,7 @@ class _TaskCreationScreenState extends State<TaskCreationScreen> {
         title: Text('Create Task'),
       ),
       body: isLoading
-          ? Center(
-              child: CircularProgressIndicator(),
-            )
+          ? _buildLoadingWidget()
           : SingleChildScrollView(
               padding: EdgeInsets.all(16),
               child: Form(

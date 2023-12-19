@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:task_management/models/task.dart';
 
-
 class TaskDatabase {
   static final TaskDatabase _instance = TaskDatabase._internal();
 
@@ -15,7 +14,7 @@ class TaskDatabase {
   Future<List<Task>> fetchTasks() async {
     try {
       final tasks = await _tasksCollection.get();
-      return tasks.docs.map((doc) => Task.fromDocumentSnapshot(doc as DocumentSnapshot<Map<String, dynamic>>)).toList();
+      return tasks.docs.map((doc) => Task.fromDocumentSnapshot(doc)).toList();
     } catch (e) {
       print('Error fetching tasks: $e');
       throw e;
@@ -30,20 +29,17 @@ class TaskDatabase {
           .where('dueDate', isLessThan: selectedDate.add(Duration(days: 1)))
           .get();
 
-      return querySnapshot.docs.map((doc) => Task.fromDocumentSnapshot(doc as DocumentSnapshot<Map<String, dynamic>>)).toList();
+      return querySnapshot.docs.map((doc) => Task.fromDocumentSnapshot(doc)).toList();
     } catch (e) {
       print('Error fetching tasks for date: $e');
       throw e;
     }
   }
 
-
- 
-
   // Insert a new task
-  Future<void> insertTask(Map<String, dynamic> task) async {
+  Future<void> insertTask(Task task) async {
     try {
-      await _tasksCollection.add(task);
+      await _tasksCollection.add(task.toMap());
     } catch (e) {
       print('Error inserting task: $e');
       throw e;

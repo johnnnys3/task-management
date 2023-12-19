@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:task_management/authentication/user.dart';
 import 'package:task_management/models/project.dart';
 import 'package:task_management/screens/project_details_screen.dart';
 import 'package:task_management/screens/create_project_screen.dart';
@@ -6,18 +8,20 @@ import 'package:task_management/screens/update_project_screen.dart';
 
 class ProjectManagementScreen extends StatefulWidget {
   final String userId;
+  final CustomUser user; // Pass the user information
+  final bool isAdmin;
 
-  ProjectManagementScreen({required this.userId});
+  ProjectManagementScreen({required this.userId, required this.user, required this.isAdmin});
 
   @override
   _ProjectManagementScreenState createState() => _ProjectManagementScreenState();
 }
 
 class _ProjectManagementScreenState extends State<ProjectManagementScreen> with AutomaticKeepAliveClientMixin {
+  List<Project> projects = []; // Populate this list with projects from Firestore or another database
+
   @override
   bool get wantKeepAlive => true;
-
-  List<Project> projects = []; // Populate this list with projects from Firestore or another database
 
   @override
   Widget build(BuildContext context) {
@@ -29,14 +33,7 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> with 
         backgroundColor: Colors.orange,
       ),
       body: _buildProjectList(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _navigateToCreateProjectScreen();
-        },
-        tooltip: 'Create Project',
-        child: Icon(Icons.add),
-        backgroundColor: Colors.orange,
-      ),
+      floatingActionButton: widget.isAdmin ? _buildFloatingActionButton() : null,
     );
   }
 
@@ -53,10 +50,23 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> with 
             _navigateToProjectDetailsScreen(projects[index]);
           },
           onLongPress: () {
-            _showOptionsDialog(projects[index]);
+            if (widget.isAdmin) {
+              _showOptionsDialog(projects[index]);
+            }
           },
         );
       },
+    );
+  }
+
+  FloatingActionButton _buildFloatingActionButton() {
+    return FloatingActionButton(
+      onPressed: () {
+        _navigateToCreateProjectScreen();
+      },
+      tooltip: 'Create Project',
+      child: Icon(Icons.add),
+      backgroundColor: Colors.orange,
     );
   }
 
@@ -131,3 +141,4 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> with 
     });
   }
 }
+

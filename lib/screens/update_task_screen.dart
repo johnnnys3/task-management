@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:task_management/models/task.dart';
 import 'package:task_management/service/task_service.dart';
 
-// ignore: must_be_immutable
 class UpdateTaskScreen extends StatefulWidget {
   Task task;
 

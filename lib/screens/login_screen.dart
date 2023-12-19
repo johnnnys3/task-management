@@ -21,17 +21,17 @@ class LoginScreen extends StatelessWidget {
         padding: const EdgeInsets.all(9.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center, // Center items horizontally
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              width: 300, // Set your desired width
+              width: 300,
               child: TextField(
                 controller: emailController,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   prefixIcon: Icon(Icons.email, color: Colors.orange),
                   labelStyle: TextStyle(color: Colors.orange),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16), // Adjust horizontal padding
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16),
                 ),
               ),
             ),
@@ -50,7 +50,7 @@ class LoginScreen extends StatelessWidget {
             ),
             SizedBox(height: 16),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center, // Center items horizontally
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Checkbox(
                   value: authService.keepSignedIn,
@@ -71,9 +71,11 @@ class LoginScreen extends StatelessWidget {
                   final user = await authService.signIn(email, password);
 
                   if (user != null) {
+                    final isAdmin = authService.isAdmin;
+
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => HomeScreen(userId: user.uid)),
+                      MaterialPageRoute(builder: (context) => HomeScreen(userId: user.uid, user: user, isAdmin: isAdmin)),
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -104,8 +106,7 @@ class LoginScreen extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => RegistrationScreen()),
                 );
               },
-              child: Text('Don\'t have an account? Register here',
-              style: TextStyle(color: Colors.orange)),
+              child: Text('Don\'t have an account? Register here', style: TextStyle(color: Colors.orange)),
             ),
           ],
         ),

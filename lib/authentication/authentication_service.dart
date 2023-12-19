@@ -2,14 +2,16 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:task_management/authentication/user.dart' as custom_user;
+import 'package:task_management/authentication/user.dart';
 
 class AuthenticationService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  User? _currentUser;
+  CustomUser? _currentUser;
   bool _keepSignedIn = false;
 
-  User? get currentUser => _currentUser;
+  CustomUser? get currentUser => _currentUser;
+
+  bool get isAdmin => _currentUser?.role == 'admin';
 
   bool get keepSignedIn => _keepSignedIn;
 
@@ -30,30 +32,40 @@ class AuthenticationService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Stream<User?> get authStateChanges {
+  Stream<CustomUser?> get authStateChanges {
     return _auth.authStateChanges().map((User? user) {
-      _currentUser = user;
+      _currentUser = user != null
+          ? CustomUser(uid: user.uid, email: user.email!, role: 'regular')
+          : null;
+      
+      // Check if the user is an admin and update the role accordingly
+      if (_currentUser != null) {
+        _currentUser = _currentUser!.copyWith(role: isAdmin ? 'admin' : 'regular');
+      }
+
       notifyListeners();
       return _currentUser;
     });
   }
 
-  Future<User?> signIn(String email, String password) async {
+  Future<CustomUser?> signIn(String email, String password) async {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
-      return _auth.currentUser;
+      return _auth.currentUser != null
+          ? CustomUser(uid: _auth.currentUser!.uid, email: _auth.currentUser!.email!, role: isAdmin ? 'admin' : 'regular')
+          : null;
     } catch (e) {
       print('SignIn Error: $e');
       throw e;
     }
   }
 
-  Future<custom_user.User?> signUp(String email, String password) async {
+  Future<CustomUser?> signUp(String email, String password, String role) async {
     try {
       await _auth.createUserWithEmailAndPassword(email: email, password: password);
 
       final customUser = _auth.currentUser != null
-          ? custom_user.User(uid: _auth.currentUser!.uid, email: _auth.currentUser!.email!, role: 'regular')
+          ? CustomUser(uid: _auth.currentUser!.uid, email: _auth.currentUser!.email!, role: role)
           : null;
 
       notifyListeners();
