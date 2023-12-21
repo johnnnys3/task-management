@@ -32,23 +32,4 @@ class ProjectDatabase {
     }
   }
 
-  Stream<List<Project>> getProjectsStream() {
-    return _firestore.collection(_collectionName).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => Project.fromMap(doc.data() as Map<String, dynamic>, doc.id)).toList();
-    });
-  }
-
-  Future<Project?> getProjectById(String projectId) async {
-    try {
-      DocumentSnapshot<Map<String, dynamic>> snapshot = await _firestore.collection(_collectionName).doc(projectId).get();
-      if (snapshot.exists) {
-        return Project.fromDocumentSnapshot(snapshot);
-      } else {
-        return null;
-      }
-    } catch (e) {
-      print('Error getting project: $e');
-      throw e;
-    }
-  }
 }

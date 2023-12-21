@@ -13,24 +13,43 @@ class TaskDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Task Details'),
       ),
-      body: Column(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDetailItem('Task Title', task.title),
+            _buildDetailItem('Description', task.description),
+            _buildDetailItem('Due Date', _formattedDate(task.dueDate)),
+            _buildDetailItem('Assigned To', task.assignedMembers.join(', ')),
+            if (task.associatedProject != null)
+              _buildDetailItem('Associated Project', task.associatedProject!.name),
+            // Add more details and attachments as needed
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ListTile(
-            title: Text(task.title),
-            subtitle: Text(task.description),
-          ),
-          ListTile(
-            title: Text('Due Date: ${_formattedDate(task.dueDate)}'),
-          ),
-          ListTile(
-            title: Text('Assigned To: ${task.assignedMembers.join(', ')}'),
-          ),
-          if (task.associatedProject != null)
-            ListTile(
-              title: Text('Associated Project: ${task.associatedProject!.name}'),
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
             ),
-          // Add more details and attachments as needed
+          ),
+          SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(fontSize: 16),
+          ),
+          Divider(),
         ],
       ),
     );

@@ -54,15 +54,7 @@ class TaskDatabase {
     }
   }
 
-  // Insert a new task
-  Future<void> insertTask(Task task) async {
-    try {
-      await _tasksCollection.add(task.toMap());
-    } catch (e) {
-      print('Error inserting task: $e');
-      throw e;
-    }
-  }
+
 
   // Update an existing task
   Future<void> updateTask(String taskId, Map<String, dynamic> task) async {
@@ -96,13 +88,4 @@ Future<List<Task>> fetchTasksForProject(String projectId) async {
     }
   }
 
-  // Delete a task
-  Future<void> deleteTask(String taskId) async {
-    try {
-      await _tasksCollection.doc(taskId).delete();
-    } catch (e) {
-      print('Error deleting task: $e');
-      throw e;
-    }
-  }
 }

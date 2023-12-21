@@ -95,23 +95,33 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
       description: updatedDescription,
       dueDate: widget.task.dueDate,
       attachments: widget.task.attachments,
-      isCompleted: isCompleted, // Set completion status
+      isCompleted: isCompleted,
       associatedProject: widget.task.associatedProject,
       assignedMembers: [],
     );
 
-    setState(() {
-      widget.task = updatedTask;
-    });
+    try {
+      TaskService taskService = TaskService();
+      await taskService.updateTask(
+        task: widget.task,
+        taskId: widget.task.id, // Pass the task ID
+        userId: '', // Pass the user ID if needed
+        updatedTask: updatedTask,
+      );
 
-    TaskService taskService = TaskService();
-    await taskService.updateTask(
-      task: widget.task,
-      taskId: '',
-      userId: '',
-      updatedTask: updatedTask,
-    );
+      setState(() {
+        widget.task = updatedTask;
+      });
 
-    Navigator.pop(context, widget.task);
+      Navigator.pop(context, widget.task);
+    } catch (error) {
+      // Handle errors, e.g., show a snackbar or display an error message
+      print('Error updating task: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred. Please try again.'),
+        ),
+      );
+    }
   }
 }

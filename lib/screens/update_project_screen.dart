@@ -3,7 +3,7 @@ import 'package:task_management/data/database_helper(project).dart';
 import 'package:task_management/models/project.dart';
 
 class UpdateProjectScreen extends StatefulWidget {
-  final Project project;
+  Project project;
 
   UpdateProjectScreen({required this.project});
 
@@ -43,6 +43,11 @@ class _UpdateProjectScreenState extends State<UpdateProjectScreen> {
     );
 
     try {
+      // Update the project in the local state
+      setState(() {
+        widget.project = updatedProject;
+      });
+
       // Update the project in the database
       await ProjectDatabase().updateProject(updatedProject);
 

@@ -47,12 +47,13 @@ class ProjectService {
     }
   }
 
-  Future<void> deleteProject(String projectId) async {
-    try {
-      await projectsCollection.doc(projectId).delete();
-    } catch (error) {
-      print('Error deleting project: $error');
-      throw Exception('Failed to delete project');
-    }
+  Future<void> deleteProject({required String projectId, required String userId}) async {
+  try {
+    await projectsCollection.doc(projectId).delete();
+  } catch (error) {
+    print('Error deleting project: $error');
+    throw Exception('Failed to delete project');
   }
+}
+
 }

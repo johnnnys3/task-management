@@ -1,7 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'package:task_management/authentication/user.dart';
-import 'package:task_management/models/project.dart' as TaskProject; // Using 'as' to create a prefix
+import 'package:task_management/models/project.dart' as TaskProject;
 import 'package:task_management/screens/project_details_screen.dart';
 import 'package:task_management/screens/create_project_screen.dart';
 import 'package:task_management/screens/update_project_screen.dart';
@@ -9,7 +8,7 @@ import 'package:task_management/service/project_service.dart';
 
 class ProjectManagementScreen extends StatefulWidget {
   final String userId;
-  final CustomUser user; // Pass the user information
+  final CustomUser user;
   final bool isAdmin;
 
   ProjectManagementScreen({required this.userId, required this.user, required this.isAdmin});
@@ -19,7 +18,7 @@ class ProjectManagementScreen extends StatefulWidget {
 }
 
 class _ProjectManagementScreenState extends State<ProjectManagementScreen> with AutomaticKeepAliveClientMixin {
-  List<TaskProject.Project> projects = []; // Populate this list with projects from Firestore or another database
+  List<TaskProject.Project> projects = [];
 
   @override
   bool get wantKeepAlive => true;
@@ -27,31 +26,25 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> with 
   @override
   void initState() {
     super.initState();
-    // Initialize projects from the database
     loadProjects();
   }
 
   Future<void> loadProjects() async {
-  try {
-    // Create an instance of ProjectService
-    ProjectService projectService = ProjectService();
-
-    // Fetch projects using the instance
-    List<TaskProject.Project> loadedProjects = (await projectService.getProjects(userId: widget.userId)).cast<TaskProject.Project>();
-
-    // Explicitly cast to the correct type
-    setState(() {
-      projects = loadedProjects;
-    });
-  } catch (e) {
-    print('Error loading projects: $e');
-    // Handle error loading projects
+    try {
+      ProjectService projectService = ProjectService();
+      List<TaskProject.Project> loadedProjects = (await projectService.getProjects(userId: widget.userId)).cast<TaskProject.Project>();
+      setState(() {
+        projects = loadedProjects;
+      });
+    } catch (e) {
+      print('Error loading projects: $e');
+      // Handle error loading projects
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Make sure to call super.build
+    super.build(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -67,19 +60,23 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> with 
     return ListView.builder(
       itemCount: projects.length,
       itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(
-            projects[index].name,
-            style: TextStyle(color: Colors.black),
+        return Card(
+          elevation: 3,
+          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: ListTile(
+            title: Text(
+              projects[index].name,
+              style: TextStyle(color: Colors.black),
+            ),
+            onTap: () {
+              _navigateToProjectDetailsScreen(projects[index]);
+            },
+            onLongPress: () {
+              if (widget.isAdmin) {
+                _showOptionsDialog(projects[index]);
+              }
+            },
           ),
-          onTap: () {
-            _navigateToProjectDetailsScreen(projects[index]);
-          },
-          onLongPress: () {
-            if (widget.isAdmin) {
-              _showOptionsDialog(projects[index]);
-            }
-          },
         );
       },
     );
@@ -105,7 +102,6 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> with 
     );
 
     if (result != null && result is TaskProject.Project) {
-      // Handle the newly created project, e.g., add it to the list
       setState(() {
         projects.add(result);
       });
@@ -160,10 +156,18 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> with 
     );
   }
 
-  void _deleteProject(TaskProject.Project project) {
-    // Implement the logic to delete the project, e.g., remove it from the list
+  void _deleteProject(TaskProject.Project project) async {
+  try {
+    ProjectService projectService = ProjectService();
+    await projectService.deleteProject(projectId: project.id as String, userId: widget.userId);
+
     setState(() {
       projects.remove(project);
     });
+  } catch (e) {
+    print('Error deleting project: $e');
+    // Handle error deleting project
   }
+}
+
 }

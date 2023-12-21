@@ -268,45 +268,70 @@ class _CreateTaskState extends State<CreateTask> {
     }
   }
 
-  void _selectProject(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          height: 200,
-          child: FutureBuilder(
-            future: fetchAvailableProjects(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              }
+void _selectProject(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    builder: (BuildContext context) {
+      return Container(
+        height: 200,
+        child: FutureBuilder(
+          future: fetchAvailableProjects(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
 
-              if (snapshot.hasError) {
-                return Center(child: Text('Error loading projects'));
-              }
+            if (snapshot.hasError) {
+              return Center(child: Text('Error loading projects'));
+            }
 
-              List<Project> projects = snapshot.data as List<Project>;
-              return ListView.builder(
-                itemCount: projects.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(projects[index].name),
-                    onTap: () {
-                      setState(() {
-                        selectedProject = projects[index].name;
-                        isProjectValid = true;
-                      });
-                      Navigator.pop(context);
-                    },
-                  );
-                },
-              );
-            },
-          ),
-        );
-      },
-    );
+            List<Project> projects = snapshot.data as List<Project>;
+            return ListView.builder(
+              itemCount: projects.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(projects[index].name),
+                  onTap: () {
+  setState(() {
+    selectedProject = projects[index].name;
+    isProjectValid = true;
+
+    // Update the selected project's task array
+    _updateProjectTask(projects[index].id, _taskNameController.text);
+  });
+  Navigator.pop(context);
+},
+                );
+              },
+            );
+          },
+        ),
+      );
+    },
+  );
+}
+
+void _updateProjectTask(String projectId, String taskTitle) {
+  try {
+    FirebaseFirestore.instance.collection('projects').doc(projectId).update({
+      'tasks': FieldValue.arrayUnion([
+        {
+          'title': taskTitle,
+          'projectId': projectId,  // Include the project ID in the task data
+          // Add other necessary fields for the task object
+        }
+      ]),
+    }).then((_) {
+      print('Project task updated successfully!');
+    }).catchError((error) {
+      print('Error updating project task: $error');
+    });
+  } catch (error) {
+    print('Error updating project task: $error');
   }
+}
+
+
 
   void _createTask(BuildContext context) async {
     if (_formKey.currentState!.validate() && selectedMember != null) {

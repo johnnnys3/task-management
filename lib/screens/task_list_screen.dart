@@ -187,15 +187,22 @@ class TaskListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(task.title),
-      subtitle: Text(task.description),
-      onTap: onTaskTap,
-      onLongPress: () {
-        if (onUpdateTask != null || onDeleteTask != null) {
-          _showTaskOptionsDialog(context);
-        }
-      },
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: ListTile(
+        title: Text(
+          task.title,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(task.description),
+        onTap: onTaskTap,
+        onLongPress: () {
+          if (onUpdateTask != null || onDeleteTask != null) {
+            _showTaskOptionsDialog(context);
+          }
+        },
+      ),
     );
   }
 
