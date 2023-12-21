@@ -10,6 +10,7 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isAdmin = false;
@@ -26,6 +27,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(labelText: 'Name'),
+            ),
             TextField(
               controller: emailController,
               decoration: InputDecoration(labelText: 'Email'),
@@ -70,6 +75,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: () async {
+                final name = nameController.text.trim();
                 final email = emailController.text.trim();
                 final password = passwordController.text.trim();
                 final role = isAdmin ? 'admin' : 'regular'; // Determine the role
@@ -78,8 +84,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     Provider.of<AuthenticationService>(context, listen: false);
 
                 try {
-                  // Sign up with email, password, and role
-                  final user = await authService.signUp(email, password, role);
+                  // Sign up with name, email, password, and role
+                  final user = await authService.signUp(name, email, password, role);
 
                   if (user != null) {
                     // Registration successful, navigate back to login page

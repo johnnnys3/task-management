@@ -10,11 +10,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   @override
   void dispose() {
+    nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -35,6 +37,23 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            Container(
+              width: 300,
+              child: TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: 'Name',
+                  prefixIcon: Icon(Icons.person, color: Colors.orange),
+                  labelStyle: TextStyle(color: Colors.orange),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                  prefixIconConstraints: BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 24,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
             Container(
               width: 300,
               child: TextField(
@@ -69,22 +88,45 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Checkbox(
-                  value: authService.keepSignedIn,
+                  value: authService.isRoleSelected,
                   onChanged: (value) {
-                    authService.keepSignedIn = value ?? false;
+                    authService.isRoleSelected = value ?? false;
                   },
                 ),
-                Text('Keep me signed in', style: TextStyle(color: Colors.orange)),
+                Text('Select Role', style: TextStyle(color: Colors.orange)),
               ],
             ),
+            if (authService.isRoleSelected)
+              SizedBox(height: 16),
+              Container(
+                width: 300,
+                child: TextField(
+                  controller: TextEditingController(text: authService.selectedRole),
+                  decoration: InputDecoration(
+                    labelText: 'Role',
+                    prefixIcon: Icon(Icons.person_outline, color: Colors.orange),
+                    labelStyle: TextStyle(color: Colors.orange),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                    prefixIconConstraints: BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 24,
+                    ),
+                  ),
+                ),
+              ),
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: () async {
+                final name = nameController.text.trim();
                 final email = emailController.text.trim();
                 final password = passwordController.text.trim();
 
                 try {
-                  final user = await authService.signIn(email, password);
+                  final user = await authService.signIn(
+                    name,
+                    email,
+                    password,
+                  );
 
                   if (user != null) {
                     final isAdmin = authService.isAdmin;
@@ -92,7 +134,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => HomeScreen(userId: user.uid, user: user, isAdmin: isAdmin),
+                        builder: (context) => HomeScreen(
+                          user: user,
+                          isAdmin: isAdmin,
+                          userId: '',
+                        ),
                       ),
                     );
                   } else {
@@ -116,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: Text('Login', style: TextStyle(color: Colors.black)),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 16),
             TextButton(
               onPressed: () {
                 Navigator.push(
@@ -124,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   MaterialPageRoute(builder: (context) => RegistrationScreen()),
                 );
               },
-              child: Text('Don\'t have an account? Register here', style: TextStyle(color: Colors.orange)),
+              child: Text('Create an Account'),
             ),
           ],
         ),

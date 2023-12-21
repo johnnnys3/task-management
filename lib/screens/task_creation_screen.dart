@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:task_management/models/project.dart';
 import 'package:task_management/models/task.dart';
 import 'package:task_management/models/task_list_notifier.dart';
+import 'package:task_management/authentication/authentication_service.dart'; // Import your authentication service
+
 
 class CreateTask extends StatefulWidget {
   final List<String> availableProjects;
@@ -24,14 +26,34 @@ class _CreateTaskState extends State<CreateTask> {
   final CollectionReference tasksCollection =
       FirebaseFirestore.instance.collection('tasks');
 
-  List<String> memberList = [
-    'John Doe',
-    'Alice',
-    'Bob',
-    'Charlie',
-  ];
-
+  List<String> memberList = []; // Initialize with an empty list
   bool isProjectValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMembers();
+  }
+
+ Future<void> _fetchMembers() async {
+  try {
+    final QuerySnapshot<Map<String, dynamic>> usersSnapshot =
+        await FirebaseFirestore.instance.collection('users').get();
+
+    if (usersSnapshot.docs.isNotEmpty) {
+      List<String> users = usersSnapshot.docs
+          .map((doc) => doc.data()['name'].toString())
+          .toList();
+
+      setState(() {
+        memberList = users;
+      });
+    }
+  } catch (error) {
+    print('Error fetching members: $error');
+    // Handle error accordingly
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -287,59 +309,58 @@ class _CreateTaskState extends State<CreateTask> {
   }
 
   void _createTask(BuildContext context) async {
-  if (_formKey.currentState!.validate() && selectedMember != null) {
-    String projectName = selectedProject ?? '';
+    if (_formKey.currentState!.validate() && selectedMember != null) {
+      String projectName = selectedProject ?? '';
 
-    if (projectName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please select a project'),
+      if (projectName.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please select a project'),
+          ),
+        );
+        return;
+      }
+
+      Task newTask = Task(
+        id: DateTime.now().toIso8601String(),
+        title: _taskNameController.text,
+        description: descriptionController.text,
+        dueDate: selectedDueDate,
+        assignedMembers: [selectedMember!],
+        associatedProject: Project(
+          id: 'project_id',
+          name: projectName,
+          description: '',
+          dueDate: DateTime.now(),
+          tasks: [], isCompleted: false,
+          // Add other necessary fields for the Project object
         ),
+        attachments: [],
+        isCompleted: false,
       );
-      return;
+
+      tasksCollection
+          .add(newTask.toMap())
+          .then((_) {
+            Provider.of<TaskListNotifier>(context, listen: false).addTask(newTask);
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Task Created Successfully!'),
+              ),
+            );
+
+            // Send the created task back to the task list screen
+            Navigator.pop(context, newTask);
+          })
+          .catchError((error) {
+            print('Error adding task: $error');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to create task. Please try again.'),
+              ),
+            );
+          });
     }
-
-    Task newTask = Task(
-      id: DateTime.now().toIso8601String(),
-      title: _taskNameController.text,
-      description: descriptionController.text,
-      dueDate: selectedDueDate,
-      assignedMembers: [selectedMember!],
-      associatedProject: Project(
-        id: 'project_id',
-        name: projectName,
-        description: '',
-        dueDate: DateTime.now(),
-        tasks: [], isCompleted: false,
-        // Add other necessary fields for the Project object
-      ),
-      attachments: [],
-      isCompleted: false,
-    );
-
-    tasksCollection
-        .add(newTask.toMap())
-        .then((_) {
-          Provider.of<TaskListNotifier>(context, listen: false).addTask(newTask);
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Task Created Successfully!'),
-            ),
-          );
-
-          // Send the created task back to the task list screen
-          Navigator.pop(context, newTask);
-        })
-        .catchError((error) {
-          print('Error adding task: $error');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to create task. Please try again.'),
-            ),
-          );
-        });
   }
-}
-
 }
