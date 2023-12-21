@@ -4,9 +4,21 @@ import 'package:task_management/authentication/authentication_service.dart';
 import 'package:task_management/authentication/registration_screen.dart';
 import 'package:task_management/screens/home_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +27,7 @@ class LoginScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Login', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.black,
+        backgroundColor: const Color.fromRGBO(0, 0, 0, 1),
       ),
       body: Padding(
         padding: const EdgeInsets.all(9.0),
@@ -32,6 +44,10 @@ class LoginScreen extends StatelessWidget {
                   prefixIcon: Icon(Icons.email, color: Colors.orange),
                   labelStyle: TextStyle(color: Colors.orange),
                   contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                  prefixIconConstraints: BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 24,
+                  ),
                 ),
               ),
             ),
@@ -75,7 +91,9 @@ class LoginScreen extends StatelessWidget {
 
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => HomeScreen(userId: user.uid, user: user, isAdmin: isAdmin)),
+                      MaterialPageRoute(
+                        builder: (context) => HomeScreen(userId: user.uid, user: user, isAdmin: isAdmin),
+                      ),
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(

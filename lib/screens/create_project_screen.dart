@@ -19,7 +19,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
         description: projectDescriptionController.text,
         dueDate: selectedDueDate,
         tasks: [],
-        id: '',
+        id: '', isCompleted: false,
         // Add other fields as needed
       );
 

@@ -1,50 +1,46 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_management/authentication/user.dart';
+import 'package:flutter/foundation.dart'; // Import this to use ChangeNotifier
 
 class AuthenticationService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  CustomUser? _currentUser;
-  bool _keepSignedIn = false;
+  late StreamController<CustomUser?> _authStateController;
+  late SharedPreferences prefs;
 
-  CustomUser? get currentUser => _currentUser;
-
-  bool get isAdmin => _currentUser?.role == 'admin';
-
-  bool get keepSignedIn => _keepSignedIn;
-
-  set keepSignedIn(bool value) {
-    _keepSignedIn = value;
-    _saveKeepSignedInState(value);
-    notifyListeners();
-  }
-
-  Future<void> _saveKeepSignedInState(bool value) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool('keepSignedIn', value);
-  }
-
-  Future<void> _loadKeepSignedInState() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    _keepSignedIn = prefs.getBool('keepSignedIn') ?? false;
-    notifyListeners();
-  }
+  CustomUser? get currentUser => _auth.currentUser != null
+      ? CustomUser(uid: _auth.currentUser!.uid, email: _auth.currentUser!.email!, role: prefs.getString('userRole') ?? 'regular')
+      : null;
 
   Stream<CustomUser?> get authStateChanges {
-    return _auth.authStateChanges().map((User? user) {
-      _currentUser = user != null
-          ? CustomUser(uid: user.uid, email: user.email!, role: 'regular')
-          : null;
-      
-      // Check if the user is an admin and update the role accordingly
-      if (_currentUser != null) {
-        _currentUser = _currentUser!.copyWith(role: isAdmin ? 'admin' : 'regular');
-      }
+    return _authStateController.stream;
+  }
 
-      notifyListeners();
-      return _currentUser;
+  bool get keepSignedIn => prefs.getBool('keepSignedIn') ?? false;
+
+  set keepSignedIn(bool value) {
+    prefs.setBool('keepSignedIn', value);
+    notifyListeners();
+  }
+
+  bool get isAdmin => prefs.getString('userRole') == 'admin';
+
+  AuthenticationService() {
+    _authStateController = StreamController<CustomUser?>();
+    init();
+  }
+
+  Future<void> init() async {
+    SharedPreferences.getInstance().then((_prefs) {
+      prefs = _prefs;
+      _auth.authStateChanges().listen((User? user) {
+        if (user == null) {
+          _authStateController.add(null);
+        } else {
+          _authStateController.add(currentUser);
+        }
+      });
     });
   }
 
@@ -52,7 +48,7 @@ class AuthenticationService extends ChangeNotifier {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       return _auth.currentUser != null
-          ? CustomUser(uid: _auth.currentUser!.uid, email: _auth.currentUser!.email!, role: isAdmin ? 'admin' : 'regular')
+          ? CustomUser(uid: _auth.currentUser!.uid, email: _auth.currentUser!.email!, role: prefs.getString('userRole') ?? 'regular')
           : null;
     } catch (e) {
       print('SignIn Error: $e');
@@ -63,11 +59,10 @@ class AuthenticationService extends ChangeNotifier {
   Future<CustomUser?> signUp(String email, String password, String role) async {
     try {
       await _auth.createUserWithEmailAndPassword(email: email, password: password);
-
       final customUser = _auth.currentUser != null
           ? CustomUser(uid: _auth.currentUser!.uid, email: _auth.currentUser!.email!, role: role)
           : null;
-
+      await prefs.setString('userRole', role);
       notifyListeners();
       return customUser;
     } catch (e) {
@@ -79,17 +74,14 @@ class AuthenticationService extends ChangeNotifier {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
-      _currentUser = null; // Ensure _currentUser is cleared on sign-out
-      notifyListeners();
+      _authStateController.add(null);
     } catch (e) {
       print('SignOut Error: $e');
       throw e;
     }
   }
 
-  AuthenticationService() {
-    Future.delayed(Duration.zero, () async {
-      await _loadKeepSignedInState();
-    });
+  void notifyListeners() {
+    _authStateController.add(currentUser);
   }
 }

@@ -1,26 +1,33 @@
 import 'package:flutter/material.dart';
-
 import 'package:task_management/authentication/user.dart';
-import 'package:task_management/models/task.dart';
+import 'package:task_management/models/task.dart' as TaskModel;
 import 'package:task_management/screens/task_details_screen.dart';
 import 'package:task_management/screens/task_creation_screen.dart';
 import 'package:task_management/screens/update_task_screen.dart';
-import 'package:task_management/service/task_service.dart'; // Import your actual task service
+import 'package:task_management/service/task_service.dart';
 
 class TaskListScreen extends StatefulWidget {
   final String userId;
-  final CustomUser user; // Pass the user information
+  final CustomUser user;
   final bool isAdmin;
+  final List<TaskModel.Task> tasks;
 
-  TaskListScreen({required this.userId, required this.user, required this.isAdmin, required List tasks});
+  TaskListScreen({
+    required this.userId,
+    required this.user,
+    required this.isAdmin,
+    required this.tasks,
+  });
 
   @override
   _TaskListScreenState createState() => _TaskListScreenState();
 }
 
 class _TaskListScreenState extends State<TaskListScreen> with AutomaticKeepAliveClientMixin {
-  List<Task> tasks = [];
-  TaskService taskService = TaskService(); // Replace with your actual task service
+  List<TaskModel.Task> tasks = [];
+  TaskService taskService = TaskService();
+  bool isLoading = false;
+  String errorMessage = '';
 
   @override
   bool get wantKeepAlive => true;
@@ -28,19 +35,29 @@ class _TaskListScreenState extends State<TaskListScreen> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
-    // Initialize tasks from the database
-    loadTasks();
+    // Initialize tasks from the passed list
+    tasks = widget.tasks;
+    // Load tasks from the database
+    _loadTasks();
   }
 
-  Future<void> loadTasks() async {
+  Future<void> _loadTasks() async {
     try {
-      List<Task> loadedTasks = await taskService.getTasks(userId: widget.userId);
+      // Fetch tasks using the instance
+      List<TaskModel.Task> loadedTasks =
+          (await taskService.getTasks(userId: widget.userId)).cast<TaskModel.Task>();
+
+      // Explicitly cast to the correct type
       setState(() {
         tasks = loadedTasks;
+        isLoading = false;
+        errorMessage = '';
       });
     } catch (e) {
-      print('Error loading tasks: $e');
-      // Handle error loading tasks
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Error loading tasks: $e';
+      });
     }
   }
 
@@ -52,30 +69,20 @@ class _TaskListScreenState extends State<TaskListScreen> with AutomaticKeepAlive
       appBar: AppBar(
         title: Text('Task List'),
       ),
-      body: ListView.builder(
-        itemCount: tasks.length,
-        itemBuilder: (context, index) {
-          return TaskListItem(
-            task: tasks[index],
-            onTaskTap: () {
-              navigateToTaskDetailsScreen(tasks[index]);
-            },
-            onUpdateTask: widget.isAdmin ? (task) => navigateToUpdateTaskScreen(task) : null,
-            onDeleteTask: widget.isAdmin ? (task) => deleteTask(task) : null,
-          );
-        },
-      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : errorMessage.isNotEmpty
+              ? ErrorDisplay(message: errorMessage)
+              : TaskListView(
+                  tasks: tasks,
+                  onTaskTap: navigateToTaskDetailsScreen,
+                  onUpdateTask: widget.isAdmin ? navigateToUpdateTaskScreen : null,
+                  onDeleteTask: widget.isAdmin ? deleteTask : null,
+                ),
       floatingActionButton: widget.isAdmin
           ? FloatingActionButton(
               onPressed: () async {
-                Task? newTask = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => TaskCreationScreen()),
-                );
-
-                if (newTask != null) {
-                  addTask(newTask);
-                }
+                await _navigateToCreateTask();
               },
               child: Icon(Icons.add),
             )
@@ -83,52 +90,93 @@ class _TaskListScreenState extends State<TaskListScreen> with AutomaticKeepAlive
     );
   }
 
-  void navigateToTaskDetailsScreen(Task task) {
+  void navigateToTaskDetailsScreen(TaskModel.Task task) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => TaskDetailsScreen(task: task)),
     );
   }
 
-  void navigateToUpdateTaskScreen(Task task) {
+  void navigateToUpdateTaskScreen(TaskModel.Task task) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => UpdateTaskScreen(task: task)),
     );
   }
 
-  void addTask(Task newTask) async {
+  void addTask(TaskModel.Task newTask) async {
     try {
-      // Add the new task to the database
       await taskService.addTask(userId: widget.userId, task: newTask);
-
-      // Reload tasks from the database
-      await loadTasks();
+      await _loadTasks();
     } catch (e) {
-      print('Error adding task: $e');
-      // Handle error adding task
+      setState(() {
+        errorMessage = 'Error adding task: $e';
+      });
     }
   }
 
-  void deleteTask(Task task) async {
+  void deleteTask(TaskModel.Task task) async {
     try {
-      // Delete the task from the database
-      await taskService.deleteTask(userId: widget.userId, taskId: task.id as String);
-
-      // Reload tasks from the database
-      await loadTasks();
+      await taskService.deleteTask(
+        userId: widget.userId,
+        taskId: task.id as String,
+      );
+      await _loadTasks();
     } catch (e) {
-      print('Error deleting task: $e');
-      // Handle error deleting task
+      setState(() {
+        errorMessage = 'Error deleting task: $e';
+      });
+    }
+  }
+
+  Future<void> _navigateToCreateTask() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreateTask(availableProjects: []),
+      ),
+    );
+
+    if (result != null && result is TaskModel.Task) {
+      addTask(result);
     }
   }
 }
 
+class TaskListView extends StatelessWidget {
+  final List<TaskModel.Task> tasks;
+  final Function(TaskModel.Task) onTaskTap;
+  final void Function(TaskModel.Task)? onUpdateTask;
+  final void Function(TaskModel.Task)? onDeleteTask;
+
+  TaskListView({
+    required this.tasks,
+    required this.onTaskTap,
+    required this.onUpdateTask,
+    required this.onDeleteTask,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: tasks.length,
+      itemBuilder: (context, index) {
+        return TaskListItem(
+          task: tasks[index],
+          onTaskTap: () => onTaskTap(tasks[index]),
+          onUpdateTask: onUpdateTask,
+          onDeleteTask: onDeleteTask,
+        );
+      },
+    );
+  }
+}
+
 class TaskListItem extends StatelessWidget {
-  final Task task;
+  final TaskModel.Task task;
   final VoidCallback onTaskTap;
-  final Function(Task)? onUpdateTask;
-  final Function(Task)? onDeleteTask;
+  final void Function(TaskModel.Task)? onUpdateTask;
+  final void Function(TaskModel.Task)? onDeleteTask;
 
   TaskListItem({
     required this.task,
@@ -179,6 +227,25 @@ class TaskListItem extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class ErrorDisplay extends StatelessWidget {
+  final String message;
+
+  ErrorDisplay({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Text(
+          message,
+          style: TextStyle(color: Colors.red),
+        ),
+      ),
     );
   }
 }

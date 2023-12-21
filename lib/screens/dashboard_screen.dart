@@ -1,116 +1,107 @@
 import 'package:flutter/material.dart';
-import 'package:task_management/models/task.dart';
+import 'package:intl/intl.dart';
 import 'package:task_management/data/database_helper(task).dart';
+import 'package:task_management/models/task.dart';
 
-class DashboardScreen extends StatelessWidget {
-  final TaskDatabase taskDatabase = TaskDatabase();
+class TaskStatsPage extends StatefulWidget {
+  @override
+  _TaskStatsPageState createState() => _TaskStatsPageState();
+}
+
+class _TaskStatsPageState extends State<TaskStatsPage> {
+  List<Task>? tasks;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _getTasks();
+  }
+
+  _getTasks() async {
+    setState(() => _isLoading = true);
+    tasks = await TaskDatabase.getTasks();
+    setState(() => _isLoading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Task>>(
-      future: taskDatabase.fetchTasks(),
-      builder: (BuildContext context, AsyncSnapshot<List<Task>> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
-        } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Text('No tasks available.');
-        } else {
-          List<Task>? tasks = snapshot.data;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Deadlines'),
+        backgroundColor: Colors.orange,
+      ),
+      body: _isLoading
+          ? _buildLoadingWidget()
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _buildUpcomingDeadlines(tasks),
+            ),
+    );
+  }
 
-          return LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints viewportConstraints) {
-              return Scaffold(
-                appBar: AppBar(
-                  title: Text('Dashboard'),
-                  backgroundColor: Colors.black, // Set app bar background color to black
-                ),
-                body: SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: viewportConstraints.maxHeight,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Task Overview',
-                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.orange), // Set text color to orange
-                          ),
-                          SizedBox(height: 20),
-                          _buildTaskStats(tasks!),
-                          SizedBox(height: 20),
-                          Text(
-                            'Upcoming Deadlines',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange), // Set text color to orange
-                          ),
-                          SizedBox(height: 10),
-                          _buildUpcomingDeadlines(tasks),
-                          SizedBox(height: 20),
-                          Text(
-                            'Task Completion Progress',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange), // Set text color to orange
-                          ),
-                          SizedBox(height: 10),
-                          _buildTaskCompletionProgress(),
-                          SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
+  Widget _buildLoadingWidget() {
+    return Center(
+      child: CircularProgressIndicator(
+        strokeWidth: 3,
+        valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+      ),
+    );
+  }
+
+  Widget _buildUpcomingDeadlines(List<Task>? tasks) {
+    List<Task> upcomingTasks = tasks!.where((task) => task.hasDueDate).toList();
+
+    return ListView.builder(
+      itemCount: upcomingTasks.length,
+      itemBuilder: (context, index) {
+        Task task = upcomingTasks[index];
+        String formattedDate = DateFormat('yyyy-MM-dd').format(task.dueDate);
+
+        return Card(
+          elevation: 3,
+          margin: EdgeInsets.symmetric(vertical: 8),
+          child: ListTile(
+            title: Text(task.title, style: TextStyle(color: Colors.orange)),
+            subtitle: Text(
+              'Due Date: $formattedDate',
+              style: TextStyle(color: Colors.orange),
+            ),
+            trailing: Icon(Icons.arrow_forward, color: Colors.orange),
+            onTap: () {
+              _handleTaskTap(task);
             },
-          );
-        }
+          ),
+        );
       },
     );
   }
 
-  Widget _buildTaskStats(List<Task> tasks) {
-    int totalTasks = tasks.length;
-    int completedTasks = tasks.where((task) => task.isCompleted).length;
-    int pendingTasks = totalTasks - completedTasks;
-
-    return Column(
-      children: [
-        ListTile(
-          leading: Icon(Icons.assignment_turned_in, color: Colors.green),
-          title: Text('Completed Tasks'),
-          trailing: Text('$completedTasks', style: TextStyle(color: Colors.white)), // Set text color to white
-        ),
-        ListTile(
-          leading: Icon(Icons.assignment_late, color: Colors.red),
-          title: Text('Pending Tasks'),
-          trailing: Text('$pendingTasks', style: TextStyle(color: Colors.white)), // Set text color to white
-        ),
-        ListTile(
-          leading: Icon(Icons.assignment, color: Colors.blue),
-          title: Text('Total Tasks'),
-          trailing: Text('$totalTasks', style: TextStyle(color: Colors.white)), // Set text color to white
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUpcomingDeadlines(List<Task> tasks) {
-    List<Task> upcomingTasks = tasks.where((task) => task.hasDueDate).toList();
-
-    return Column(
-      children: upcomingTasks.map((task) {
-        return ListTile(
-          title: Text(task.title, style: TextStyle(color: Colors.white)), // Set text color to white
-          subtitle: Text('Due Date: ${task.dueDate}', style: TextStyle(color: Colors.white)), // Set text color to white
+  void _handleTaskTap(Task task) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Task Details'),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Title: ${task.title}'),
+              Text('Due Date: ${DateFormat('yyyy-MM-dd').format(task.dueDate)}'),
+              // Add more details as needed
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Close'),
+            ),
+          ],
         );
-      }).toList(),
+      },
     );
-  }
-
-  Widget _buildTaskCompletionProgress() {
-    // Add your logic for task completion progress here
-    return Text('Task Completion: Placeholder%', style: TextStyle(color: Colors.white)); // Set text color to white
   }
 }

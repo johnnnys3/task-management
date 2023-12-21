@@ -1,96 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:task_management/data/database_helper(task).dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'package:task_management/models/project.dart';
 import 'package:task_management/models/task.dart';
+import 'package:task_management/models/task_list_notifier.dart';
 
-class TaskCreationScreen extends StatefulWidget {
+class CreateTask extends StatefulWidget {
+  final List<String> availableProjects;
+
+  CreateTask({required this.availableProjects});
+
   @override
-  _TaskCreationScreenState createState() => _TaskCreationScreenState();
+  _CreateTaskState createState() => _CreateTaskState();
 }
 
-class _TaskCreationScreenState extends State<TaskCreationScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
+class _CreateTaskState extends State<CreateTask> {
+  final _formKey = GlobalKey<FormState>();
   DateTime selectedDueDate = DateTime.now();
-  bool isLoading = false;
+  TextEditingController _taskNameController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
+  String? selectedMember;
+  String? selectedProject;
+  final CollectionReference tasksCollection =
+      FirebaseFirestore.instance.collection('tasks');
 
-  // Counter to keep track of the last assigned ID
-  int _lastId = 0;
+  List<String> memberList = [
+    'John Doe',
+    'Alice',
+    'Bob',
+    'Charlie',
+  ];
 
-  // Mock function to simulate fetching assignee details from the work database
-  Future<String> fetchAssigneeFromWorkDatabase() async {
-    // Simulate an asynchronous call to your work database API
-    // Replace this with your actual implementation
-    await Future.delayed(Duration(seconds: 2));
-    return 'Assignee from Work Database';
-  }
-
-  // Method to create a task
-  void _createTask(BuildContext context) async {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        isLoading = true;
-      });
-
-      // Increment the counter for a new unique ID
-      _lastId++;
-
-      // Fetch assignee details asynchronously
-      String assigneeDetails = await fetchAssigneeFromWorkDatabase();
-
-      // Create the task
-      Task newTask = Task(
-        id: _lastId.toString(),
-        title: titleController.text,
-        description: descriptionController.text,
-        dueDate: selectedDueDate,
-        assignedTo: assigneeDetails,
-        attachments: [],
-        isCompleted: false,
-        associatedProject: null, // You might need to update this based on your project structure
-      );
-
-      try {
-        // Save the task to the database
-        await TaskDatabase().insertTask(newTask);
-
-        // Optionally, you can print a success message
-        print('Task created successfully.');
-
-        // Navigate back to the previous screen
-        Navigator.pop(context);
-      } catch (e) {
-        // Handle errors, e.g., show a snackbar or display an error message
-        print('Error creating task: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('An error occurred. Please try again.'),
-          ),
-        );
-      } finally {
-        setState(() {
-          isLoading = false;
-        });
-      }
-    }
-  }
-
-  // Widget to display the loading spinner
-  Widget _buildLoadingWidget() {
-    return Center(
-      child: CircularProgressIndicator(),
-    );
-  }
-
-  // Method to show an error snackbar
-  void _showErrorSnackbar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
+  bool isProjectValid = false;
 
   @override
   Widget build(BuildContext context) {
@@ -98,79 +39,307 @@ class _TaskCreationScreenState extends State<TaskCreationScreen> {
       appBar: AppBar(
         title: Text('Create Task'),
       ),
-      body: isLoading
-          ? _buildLoadingWidget()
-          : SingleChildScrollView(
-              padding: EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: titleController,
-                      decoration: InputDecoration(
-                        labelText: 'Title',
-                      ),
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Please enter a title';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: descriptionController,
-                      decoration: InputDecoration(
-                        labelText: 'Description',
-                      ),
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Please enter a description';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    // Due Date Picker
-                    Row(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Card(
+                  elevation: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text('Due Date: '),
-                        SizedBox(width: 8),
-                        TextButton(
-                          onPressed: () async {
-                            DateTime? pickedDate = await showDatePicker(
-                              context: context,
-                              initialDate: selectedDueDate,
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime(2101),
-                            );
-                            if (pickedDate != null &&
-                                pickedDate != selectedDueDate) {
-                              setState(() {
-                                selectedDueDate = pickedDate;
-                              });
-                            }
-                          },
-                          child: Text(
-                            "${selectedDueDate.toLocal()}".split(' ')[0],
-                            style: TextStyle(color: Colors.blue),
+                        Text(
+                          'Task Information',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
+                        ),
+                        SizedBox(height: 16),
+                        TextFormField(
+                          controller: _taskNameController,
+                          decoration: InputDecoration(
+                            labelText: 'Task Name',
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a task name';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: 16),
+                        TextFormField(
+                          controller: descriptionController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            labelText: 'Task Description',
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Text('Due Date: '),
+                            SizedBox(width: 8),
+                            TextButton(
+                              onPressed: () async {
+                                DateTime? pickedDate = await showDatePicker(
+                                  context: context,
+                                  initialDate: selectedDueDate,
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime(2101),
+                                );
+                                if (pickedDate != null &&
+                                    pickedDate != selectedDueDate) {
+                                  setState(() {
+                                    selectedDueDate = pickedDate;
+                                  });
+                                }
+                              },
+                              child: Text(
+                                "${selectedDueDate.toLocal()}".split(' ')[0],
+                                style: TextStyle(color: Colors.blue),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        _createTask(context);
-                      },
-                      child: Text('Create Task'),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                SizedBox(height: 16),
+                Card(
+                  elevation: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Assign Members',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(selectedMember ?? 'Select Member'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                _selectMember(context);
+                              },
+                              child: Text('Choose'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Card(
+                  elevation: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Project Information',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(selectedProject ?? 'Select Project'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                _selectProject(context);
+                              },
+                              child: Text('Choose'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: isProjectValid && selectedMember != null
+                      ? () => _createTask(context)
+                      : null,
+                  child: Text('Create Task'),
+                ),
+              ],
             ),
+          ),
+        ),
+      ),
     );
   }
+
+  void _selectMember(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 200,
+          child: ListView.builder(
+            itemCount: memberList.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(memberList[index]),
+                onTap: () {
+                  setState(() {
+                    selectedMember = memberList[index];
+                  });
+                  Navigator.pop(context);
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<List<Project>> fetchAvailableProjects() async {
+    try {
+      final QuerySnapshot result =
+          await FirebaseFirestore.instance.collection('projects').get();
+      final List<DocumentSnapshot> documents = result.docs;
+
+      List<Project> projects = documents.map((doc) {
+        Timestamp? dueDateTimestamp = doc['dueDate'] as Timestamp?;
+        DateTime dueDate = dueDateTimestamp?.toDate() ?? DateTime.now();
+
+        return Project(
+          id: doc.id,
+          name: doc['name'] ?? '',
+          description: doc['description'] ?? '',
+          dueDate: dueDate,
+          tasks: [], isCompleted: false,
+          // Add other necessary fields for the Project object
+        );
+      }).toList();
+
+      return projects;
+    } catch (error) {
+      print('Error fetching projects: $error');
+      throw error; // Rethrow the error to propagate it to the caller
+    }
+  }
+
+  void _selectProject(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 200,
+          child: FutureBuilder(
+            future: fetchAvailableProjects(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+
+              if (snapshot.hasError) {
+                return Center(child: Text('Error loading projects'));
+              }
+
+              List<Project> projects = snapshot.data as List<Project>;
+              return ListView.builder(
+                itemCount: projects.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(projects[index].name),
+                    onTap: () {
+                      setState(() {
+                        selectedProject = projects[index].name;
+                        isProjectValid = true;
+                      });
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  void _createTask(BuildContext context) async {
+  if (_formKey.currentState!.validate() && selectedMember != null) {
+    String projectName = selectedProject ?? '';
+
+    if (projectName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please select a project'),
+        ),
+      );
+      return;
+    }
+
+    Task newTask = Task(
+      id: DateTime.now().toIso8601String(),
+      title: _taskNameController.text,
+      description: descriptionController.text,
+      dueDate: selectedDueDate,
+      assignedMembers: [selectedMember!],
+      associatedProject: Project(
+        id: 'project_id',
+        name: projectName,
+        description: '',
+        dueDate: DateTime.now(),
+        tasks: [], isCompleted: false,
+        // Add other necessary fields for the Project object
+      ),
+      attachments: [],
+      isCompleted: false,
+    );
+
+    tasksCollection
+        .add(newTask.toMap())
+        .then((_) {
+          Provider.of<TaskListNotifier>(context, listen: false).addTask(newTask);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Task Created Successfully!'),
+            ),
+          );
+
+          // Send the created task back to the task list screen
+          Navigator.pop(context, newTask);
+        })
+        .catchError((error) {
+          print('Error adding task: $error');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to create task. Please try again.'),
+            ),
+          );
+        });
+  }
+}
+
 }

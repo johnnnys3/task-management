@@ -39,8 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
         appBar: AppBar(
           title: Text('Task Management'),
           actions: [
-            if (widget.isAdmin)
-              _buildIconButton(Icons.business, 'projectManagement'),
+            _buildIconButton(Icons.business, 'projectManagement'),
             _buildIconButton(Icons.notifications, 'notification'),
             _buildIconButton(Icons.calendar_today, 'calendar'),
             _buildIconButton(Icons.assignment, 'taskList'),
@@ -70,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
         body: TabBarView(
           children: [
             ReportingScreen(),
-            DashboardScreen(),
+            TaskStatsPage(),
           ],
         ),
       ),
@@ -94,9 +93,9 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'notification':
         return NotificationScreen();
       case 'calendar':
-        return CalendarIntegrationScreen();
+        return TaskCalendar();
       case 'taskList':
-        return TaskListScreen(userId: widget.userId, tasks: [], user: widget.user, isAdmin: widget.isAdmin);
+        return TaskListScreen(userId: widget.userId, user: widget.user, isAdmin: widget.isAdmin, tasks: [],);
       case 'projectManagement':
         return ProjectManagementScreen(userId: widget.userId, isAdmin: widget.isAdmin, user: widget.user);
       default:

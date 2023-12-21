@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
 
+import 'package:flutter/material.dart';
 import 'package:task_management/authentication/user.dart';
-import 'package:task_management/models/project.dart';
+import 'package:task_management/models/project.dart' as TaskProject; // Using 'as' to create a prefix
 import 'package:task_management/screens/project_details_screen.dart';
 import 'package:task_management/screens/create_project_screen.dart';
 import 'package:task_management/screens/update_project_screen.dart';
+import 'package:task_management/service/project_service.dart';
 
 class ProjectManagementScreen extends StatefulWidget {
   final String userId;
@@ -18,10 +19,35 @@ class ProjectManagementScreen extends StatefulWidget {
 }
 
 class _ProjectManagementScreenState extends State<ProjectManagementScreen> with AutomaticKeepAliveClientMixin {
-  List<Project> projects = []; // Populate this list with projects from Firestore or another database
+  List<TaskProject.Project> projects = []; // Populate this list with projects from Firestore or another database
 
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize projects from the database
+    loadProjects();
+  }
+
+  Future<void> loadProjects() async {
+  try {
+    // Create an instance of ProjectService
+    ProjectService projectService = ProjectService();
+
+    // Fetch projects using the instance
+    List<TaskProject.Project> loadedProjects = (await projectService.getProjects(userId: widget.userId)).cast<TaskProject.Project>();
+
+    // Explicitly cast to the correct type
+    setState(() {
+      projects = loadedProjects;
+    });
+  } catch (e) {
+    print('Error loading projects: $e');
+    // Handle error loading projects
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +104,7 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> with 
       ),
     );
 
-    if (result != null && result is Project) {
+    if (result != null && result is TaskProject.Project) {
       // Handle the newly created project, e.g., add it to the list
       setState(() {
         projects.add(result);
@@ -86,7 +112,7 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> with 
     }
   }
 
-  void _navigateToProjectDetailsScreen(Project project) {
+  void _navigateToProjectDetailsScreen(TaskProject.Project project) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -95,7 +121,7 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> with 
     );
   }
 
-  void _showOptionsDialog(Project project) {
+  void _showOptionsDialog(TaskProject.Project project) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -125,7 +151,7 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> with 
     );
   }
 
-  void _editProject(Project project) {
+  void _editProject(TaskProject.Project project) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -134,11 +160,10 @@ class _ProjectManagementScreenState extends State<ProjectManagementScreen> with 
     );
   }
 
-  void _deleteProject(Project project) {
+  void _deleteProject(TaskProject.Project project) {
     // Implement the logic to delete the project, e.g., remove it from the list
     setState(() {
       projects.remove(project);
     });
   }
 }
-

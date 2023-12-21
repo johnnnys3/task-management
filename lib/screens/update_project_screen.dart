@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:task_management/data/database_helper(project).dart';
- // Make sure to import your ProjectDatabase class
 import 'package:task_management/models/project.dart';
 
 class UpdateProjectScreen extends StatefulWidget {
@@ -16,6 +15,7 @@ class _UpdateProjectScreenState extends State<UpdateProjectScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   late DateTime _dueDate;
+  bool _isCompleted = false;
 
   @override
   void initState() {
@@ -24,6 +24,7 @@ class _UpdateProjectScreenState extends State<UpdateProjectScreen> {
     _nameController.text = widget.project.name;
     _descriptionController.text = widget.project.description;
     _dueDate = widget.project.dueDate;
+    _isCompleted = widget.project.isCompleted;
   }
 
   void _updateProject() async {
@@ -38,6 +39,7 @@ class _UpdateProjectScreenState extends State<UpdateProjectScreen> {
       dueDate: _dueDate,
       tasks: widget.project.tasks,
       id: widget.project.id,
+      isCompleted: _isCompleted,
     );
 
     try {
@@ -101,6 +103,22 @@ class _UpdateProjectScreenState extends State<UpdateProjectScreen> {
                     "${_dueDate.toLocal()}".split(' ')[0],
                     style: TextStyle(color: Colors.blue),
                   ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            // Completion Status Toggle
+            Row(
+              children: [
+                Text('Completed:'),
+                SizedBox(width: 8),
+                Switch(
+                  value: _isCompleted,
+                  onChanged: (value) {
+                    setState(() {
+                      _isCompleted = value;
+                    });
+                  },
                 ),
               ],
             ),

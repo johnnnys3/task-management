@@ -24,8 +24,12 @@ class TaskDetailsScreen extends StatelessWidget {
             title: Text('Due Date: ${_formattedDate(task.dueDate)}'),
           ),
           ListTile(
-            title: Text('Assigned To: ${task.assignedTo}'),
+            title: Text('Assigned To: ${task.assignedMembers.join(', ')}'),
           ),
+          if (task.associatedProject != null)
+            ListTile(
+              title: Text('Associated Project: ${task.associatedProject!.name}'),
+            ),
           // Add more details and attachments as needed
         ],
       ),
